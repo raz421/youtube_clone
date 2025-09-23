@@ -37,10 +37,11 @@ const registerController = asyncHandaller(async (req, res) => {
     "-password -refreshToken"
   );
   if (!createdUser) {
-    throw ApiError(500, "something went wrong while registering the user "); // g m b
+    throw ApiError(500, "something went wrong while registering the user "); 
   }
   return res
     .status(201)
     .json(ApiRespone(200, createdUser, "User reister Successfully"));
 });
 export { registerController };
+// b g
