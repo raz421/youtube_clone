@@ -194,12 +194,89 @@ const changePassword = asyncHandaller(async (req, res) => {
   await user.save({ validateBeforeSave: true });
   res.status(200).json(new ApiResponse(200, {}, "password successfully save"));
 });
+const getCurrentUser = asyncHandaller(async (req, res) => {
+  return res
+    .status(200)
+    .json(new ApiResponse(200, req.user, "get current user successfully "));
+});
+const updateAccountDetails = asyncHandaller(async (req, res) => {
+  const { fullname, email } = req.body;
+  if (!(fullname && email)) {
+    throw new ApiError(400, "All fields are required");
+  }
+  const user = await User.findByIdAndUpdate(
+    req?.user?._id,
+    {
+      $set: {
+        fullname,
+        email,
+      },
+    },
+    {
+      new: true,
+    }
+  ).select("-password");
+  return req
+    .status(200)
+    .json(
+      new ApiResponse(200, user, "user account details update successfully")
+    );
+});
+
+const updateAvatar = asyncHandaller(async (req, res) => {
+  const avatarLocalPath = req?.file.path;
+  if (!avatarLocalPath) {
+    throw new ApiError(400, "Avatar is not found");
+  }
+  const avatar = await uploadToCloudinary(avatarLocalPath);
+  if (!avatar.url) {
+    throw new ApiError(400, "Avatar not upload in cloudinary ");
+  }
+  const user = await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $set: { avatar },
+    },
+    {
+      new: true,
+    }
+  ).select("-password");
+  return req
+    .status(200)
+    .json(new ApiResponse(200, user, "Avatar updated successfully"));
+});
+const updateCoverImage = asyncHandaller(async (req, res) => {
+  const coverImageLocalPath = req?.file.path;
+  if (!coverImageLocalPath) {
+    throw new ApiError(400, "CoverImage  is not found");
+  }
+  const coverImage = await uploadToCloudinary(coverImageLocalPath);
+  if (!coverImage.url) {
+    throw new ApiError(400, "CoverImage not upload in cloudinary ");
+  }
+  const user = await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $set: { avatar },
+    },
+    {
+      new: true,
+    }
+  ).select("-password");
+  return req
+    .status(200)
+    .json(new ApiResponse(200, user, "CoverImage updated successfully"));
+});
 
 export {
   changePassword,
+  getCurrentUser,
   loginController,
   logoutController,
   refreshAccessToken,
   registerController,
+  updateAccountDetails,
+  updateAvatar,
+  updateCoverImage,
 };
 // b g
