@@ -133,7 +133,7 @@ const logoutController = asyncHandaller(async (req, res) => {
     .clearCookie("refreshToken", options)
     .json(new ApiResponse(200, {}, "log out successfully"));
 });
-const refreshAccessToken = asyncHandaller(async () => {
+const refreshAccessToken = asyncHandaller(async (req, res) => {
   const incomingAccessToken = req.cookies("refreshToken") || req.body;
   if (!incomingAccessToken) {
     throw new ApiError(401, "unauthorize request");
@@ -176,7 +176,27 @@ const refreshAccessToken = asyncHandaller(async () => {
   }
 });
 
+const changePassword = asyncHandaller(async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+  if (!oldPassword) {
+    throw new ApiError(401, "old password required");
+  }
+  const userId = req?.user?._id;
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new ApiError(401, "unauthorize access");
+  }
+  const passwordValid = await user.isPassword(oldPassword);
+  if (!passwordValid) {
+    throw new ApiError(401, "old password is wrong");
+  }
+  user.password = newPassword;
+  await user.save({ validateBeforeSave: true });
+  res.status(200).json(new ApiResponse(200, {}, "password successfully save"));
+});
+
 export {
+  changePassword,
   loginController,
   logoutController,
   refreshAccessToken,
