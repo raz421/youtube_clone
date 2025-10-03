@@ -201,8 +201,8 @@ const getCurrentUser = asyncHandaller(async (req, res) => {
 });
 const updateAccountDetails = asyncHandaller(async (req, res) => {
   const { fullname, email } = req.body;
-  if (!(fullname && email)) {
-    throw new ApiError(400, "All fields are required");
+  if (!fullname || !email) {
+    throw new ApiError(400, "Atleast one fields  are required");
   }
   const user = await User.findByIdAndUpdate(
     req?.user?._id,
@@ -267,10 +267,77 @@ const updateCoverImage = asyncHandaller(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, user, "CoverImage updated successfully"));
 });
+const getUserChannelProfile = asyncHandaller(async (req, res) => {
+  const { username } = req.params;
+  if (!req.params?.trim()) {
+    throw new ApiError(401, "username is required");
+  }
+  const channal = await User.aggregate([
+    {
+      $match: {
+        username: username?.toLowerCase(),
+      },
+    },
+    {
+      $lookup: {
+        $from: "subscriptions",
+        $localField: "_id",
+        $foreginField: "channal",
+        as: "subscribers",
+      },
+    },
+    {
+      $lookup: {
+        $from: "subscriptions",
+        $localField: "_id",
+        $foreginField: "subscriber",
+        as: "subscribedTo",
+      },
+    },
+    {
+      $addFields: {
+        subscribersCount: {
+          $size: "$subscribers",
+        },
+        channalSubscribedToCount: {
+          $size: "subscribedTo",
+        },
+        isSubscribed: {
+          $cond: {
+            if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+            then: true,
+            else: false,
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        fullname: 1,
+        username: 1,
+        subscribersCount: 1,
+        channalSubscribedToCount: 1,
+        isSubscribed: 1,
+        avatar: 1,
+        coverImage: 1,
+        email: 1,
+      },
+    },
+  ]);
+  if (!channal?.length) {
+    throw new ApiError(404, "channel does not exist");
+  }
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, channal[0], "User channel fetched successfully")
+    );
+});
 
 export {
   changePassword,
   getCurrentUser,
+  getUserChannelProfile,
   loginController,
   logoutController,
   refreshAccessToken,
