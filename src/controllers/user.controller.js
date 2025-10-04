@@ -1,5 +1,6 @@
 // g m b
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 import { User } from "../models/user.model.js";
 import { ApiError } from "../utills/ApiError.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
@@ -257,7 +258,7 @@ const updateCoverImage = asyncHandaller(async (req, res) => {
   const user = await User.findByIdAndUpdate(
     req.user._id,
     {
-      $set: { avatar },
+      $set: { coverImage },
     },
     {
       new: true,
@@ -333,11 +334,61 @@ const getUserChannelProfile = asyncHandaller(async (req, res) => {
       new ApiResponse(200, channal[0], "User channel fetched successfully")
     );
 });
+const getWatchHistory = asyncHandaller(async (req, res) => {
+  const user = await User.aggregate([
+    {
+      $match: {
+        _id: mongoose.Types.ObjectId(req.user._id),
+      },
+    },
+    {
+      $lookup: {
+        from: "videos",
+        localField: "watchistory",
+        foreignField: "_id",
+        as: "watchHistory",
+        pipeline: [
+          {
+            $lookup: {
+              from: "users",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+              pipeline: [
+                {
+                  $project: {
+                    username: 1,
+                    fullname: 1,
+                    avatar: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $addFields: {
+              owner: {
+                $first: "$owner",
+              },
+            },
+          },
+        ],
+      },
+    },
+  ]);
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, user[0].watchHistory),
+      "Watch History fetched successfully"
+    );
+});
 
 export {
   changePassword,
   getCurrentUser,
   getUserChannelProfile,
+  getWatchHistory,
   loginController,
   logoutController,
   refreshAccessToken,
