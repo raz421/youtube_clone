@@ -1,18 +1,7 @@
-import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
+import { cloudinary } from "./cloudinary-confiure.js";
 
-// cloudinary.config({
-//   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-//   api_key: process.env.CLOUDINARY_API_KEY,
-//   api_secret: process.env.CLOUDINARY_API_SECRET,
-// });
 const uploadToCloudinary = async (localfilePath) => {
-  cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-  });
-
   try {
     if (!localfilePath) {
       console.log(localfilePath);
@@ -30,4 +19,21 @@ const uploadToCloudinary = async (localfilePath) => {
     return null;
   }
 };
-export { uploadToCloudinary };
+
+const deleteFromCloudinary = async (publicId) => {
+  try {
+    if (!publicId) {
+      console.log("No public ID provided for deletion");
+      return null;
+    }
+
+    const result = await cloudinary.uploader.destroy(publicId);
+    console.log("Cloudinary delete result:", result);
+    return result;
+  } catch (error) {
+    console.log("Error deleting from cloudinary:", error);
+    return null;
+  }
+};
+
+export { deleteFromCloudinary, uploadToCloudinary };
