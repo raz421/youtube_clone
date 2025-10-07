@@ -103,6 +103,7 @@ const deleteVideo = asyncHandaller(async (req, res) => {
   if (!deletedVideoInfo) {
     throw new ApiError(404, "video not found when delete a video");
   }
+
   res
     .status(200)
     .json(
@@ -113,4 +114,28 @@ const deleteVideo = asyncHandaller(async (req, res) => {
       )
     );
 });
-export { deleteVideo, getVideoById, publishVideo, updateVideoDetails };
+const togglePublishVideo = asyncHandaller(async (req, res) => {
+  const { id } = req.params;
+  if (!id) {
+    throw new ApiError(400, "videoId not found in the url");
+  }
+  const video = await Video.findById(id);
+
+  if (!video) {
+    throw new ApiError(404, "Video not Found");
+  }
+  video.isPublished = !video.isPublished;
+  await video.save({ validateBeforeSave: false });
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, video, "toggle a publish in a video sucessfully")
+    );
+});
+export {
+  deleteVideo,
+  getVideoById,
+  publishVideo,
+  togglePublishVideo,
+  updateVideoDetails,
+};
