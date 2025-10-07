@@ -45,7 +45,7 @@ const registerController = asyncHandaller(async (req, res) => {
   if (
     req.files &&
     Array.isArray(req.files.coverImage) &&
-    req.files.coverImage.length > 0
+    req.files.coverImage[0].path
   ) {
     coverImageLocalPath = req.files.coverImage[0].path;
   }
@@ -233,7 +233,10 @@ const updateAccountDetails = asyncHandaller(async (req, res) => {
 const updateAvatar = asyncHandaller(async (req, res) => {
   const avatarLocalPath = req?.file?.path;
   if (!avatarLocalPath) {
-    throw new ApiError(400, "Avatar file is required");
+    throw new ApiError(
+      404,
+      "Avatar local path is not found  when update avatar"
+    );
   }
 
   const user = await User.findById(req.user._id);
@@ -244,7 +247,10 @@ const updateAvatar = asyncHandaller(async (req, res) => {
   // Upload new avatar first
   const avatar = await uploadToCloudinary(avatarLocalPath);
   if (!avatar?.url) {
-    throw new ApiError(400, "Avatar upload failed");
+    throw new ApiError(
+      400,
+      "Avatar upload failed to cloudinary when update a avatar"
+    );
   }
 
   // Delete old avatar if it exists
@@ -360,9 +366,9 @@ const getUserChannelProfile = asyncHandaller(async (req, res) => {
     },
   ]);
 
-  if (!channel?.length) {
-    throw new ApiError(404, "channel does not exist");
-  }
+  // if (!channel?.length) {
+  //   throw new ApiError(404, "channel does not exist");
+  // }
   return res
     .status(200)
     .json(
@@ -414,8 +420,11 @@ const getWatchHistory = asyncHandaller(async (req, res) => {
   return res
     .status(200)
     .json(
-      new ApiResponse(200, user[0].watchHistory),
-      "Watch History fetched successfully"
+      new ApiResponse(
+        200,
+        user[0].watchHistory,
+        "Watch History fetched successfully"
+      )
     );
 });
 

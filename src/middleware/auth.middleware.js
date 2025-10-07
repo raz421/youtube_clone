@@ -4,7 +4,7 @@ import { ApiError } from "../utills/ApiError.js";
 import { asyncHandaller } from "../utills/asyncHandaller.js";
 const verifyJwt = asyncHandaller(async (req, res, next) => {
   try {
-    console.log("header of auth", req.header("Authorization"));
+    // console.log("header of auth", req.header("Authorization"));
     const token =
       req.cookies?.accessToken ||
       req.header("Authorization")?.replace("Bearer ", "");
@@ -16,7 +16,7 @@ const verifyJwt = asyncHandaller(async (req, res, next) => {
       token,
       process.env.ACCESSTOKEN_TOKEN_SECRET
     );
-    console.log("Decoded Token Result", decodedToken);
+    // console.log("Decoded Token Result", decodedToken);
     const user = await User.findById(decodedToken._id).select(
       "-password -refreshToken"
     );
