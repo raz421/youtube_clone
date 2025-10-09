@@ -5,7 +5,7 @@ const playlistSchema = new Schema(
       type: String,
       required: true,
     },
-    descriptions: {
+    description: {
       type: String,
       required: true,
     },
