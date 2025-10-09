@@ -1,8 +1,12 @@
+import mongoose from "mongoose";
 import { Video } from "../models/video.model.js";
 import { ApiError } from "../utills/ApiError.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
 import { asyncHandaller } from "../utills/asyncHandaller.js";
-import { uploadToCloudinary } from "../utills/cloudinary.js";
+import {
+  deleteFromCloudinary,
+  uploadToCloudinary,
+} from "../utills/cloudinary.js";
 
 const publishVideo = asyncHandaller(async (req, res) => {
   const { title, description } = req.body;
@@ -64,6 +68,10 @@ const updateVideoDetails = asyncHandaller(async (req, res) => {
   if (!title || !description) {
     throw new ApiError("Title and Description Field are required");
   }
+  const video = await Video.findById(id);
+  if (!video) {
+    throw new ApiError(404, "video not found when update video details");
+  }
   const thumbnailLocalPath = req?.file?.path;
   if (!thumbnailLocalPath) {
     throw new ApiError(
@@ -74,6 +82,10 @@ const updateVideoDetails = asyncHandaller(async (req, res) => {
   const thumbnail = await uploadToCloudinary(thumbnailLocalPath);
   if (!thumbnail.url) {
     throw new ApiError(401, "thumbnail not upload in Cloudinary");
+  }
+  if (video.thumbnail) {
+    const public_id = video.thumbnail.split("/").pop().split(".")[0];
+    await deleteFromCloudinary(public_id);
   }
   const updateVideo = await Video.findByIdAndUpdate(
     id,
@@ -132,8 +144,92 @@ const togglePublishVideo = asyncHandaller(async (req, res) => {
       new ApiResponse(200, video, "toggle a publish in a video sucessfully")
     );
 });
+
+const getAllVideos = asyncHandaller(async (req, res) => {
+  const {
+    page = 1,
+    limit = 10,
+    userId,
+    sortBy = "createdAt",
+    sortType = "desc",
+  } = req.query;
+
+  const sortedOrder = sortType === "asc" ? 1 : -1;
+  const options = {
+    page: parseInt(page),
+    limit: parseInt(limit),
+  };
+  const video = await Video.aggregatePaginate(
+    Video.aggregate([
+      {
+        $match: {
+          owner: new mongoose.Types.ObjectId(userId),
+        },
+      },
+      {
+        $sort: {
+          [sortBy]: sortedOrder,
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "owner",
+          foreignField: "_id",
+          as: "ownerDetails",
+          pipeline: [
+            {
+              $project: {
+                username: 1,
+                fullname: 1,
+                avatar: 1,
+              },
+            },
+          ],
+        },
+      },
+      {
+        $addFields: {
+          ownerDetails: {
+            $first: "$ownerDetails",
+          },
+        },
+      },
+    ]),
+    options
+  );
+  return res
+    .status(200)
+    .json(new ApiResponse(200, video, "videos fetched successfully"));
+});
+// sample response
+// {
+//   "success": true,
+//   "message": "Videos fetched successfully",
+//   "data": {
+//     "docs": [
+//       {
+//         "_id": "66fe7bcad7f05f342d9a7e34",
+//         "title": "My First Video",
+//         "views": 120,
+//         "ownerDetails": {
+//           "username": "Meharaz",
+//           "email": "meharaz@example.com"
+//         }
+//       },
+//       ...
+//     ],
+//     "totalDocs": 25,
+//     "limit": 10,
+//     "page": 1,
+//     "totalPages": 3,
+//     "hasNextPage": true
+//   }
+// }
+
 export {
   deleteVideo,
+  getAllVideos,
   getVideoById,
   publishVideo,
   togglePublishVideo,
