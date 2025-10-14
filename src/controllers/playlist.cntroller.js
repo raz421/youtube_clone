@@ -7,17 +7,24 @@ const createPlaylist = asyncHandaller(async (req, res) => {
   if (!description || !name) {
     throw new ApiError(401, "All Fields are required");
   }
+  console.log("User from createPlaylist", req.user);
   const playList = await Playlist.create({
     name,
     description,
-    owner: req.user._id,
+    owner: req.user?._id,
   });
   return res
     .status(200)
-    .json(new ApiResponse(200, playList, "playlist successfully created"));
+    .json(
+      new ApiResponse(
+        200,
+        { playList: playList },
+        "playlist successfully created"
+      )
+    );
 });
 const getUserPlaylist = asyncHandaller(async (req, res) => {
-  const { userId } = req.parems;
+  const { userId } = req.params;
   if (!userId) {
     throw new ApiError(404, "User Id is required when getUserPlaylist");
   }
@@ -32,7 +39,7 @@ const getUserPlaylist = asyncHandaller(async (req, res) => {
     );
 });
 const getPlaylistById = asyncHandaller(async (req, res) => {
-  const { playListId } = req.parems;
+  const { playListId } = req.params;
   if (!playListId) {
     throw new ApiError(404, "PlayList Id is required ");
   }
@@ -45,30 +52,37 @@ const getPlaylistById = asyncHandaller(async (req, res) => {
     .json(new ApiResponse(200, playList, "playlist fetched successfully"));
 });
 const addVideoToPlaylist = asyncHandaller(async (req, res) => {
-  const { playlistId, videoId } = req.params;
-  if (!playlistId || !videoId) {
+  const { playListId, videoId } = req.params;
+  if (!playListId || !videoId) {
     throw new ApiError(401, "playlist and video id is required");
   }
-  const playList = await Playlist.findByIdAndUpdate(
-    playlistId,
+
+  const playlistExists = await Playlist.findById(playListId);
+  if (!playlistExists) {
+    throw new ApiError(404, "Playlist not found");
+  }
+
+  const updatedPlaylist = await Playlist.findByIdAndUpdate(
+    playListId,
     {
-      $set: { videos: videoId },
+      $addToSet: { videos: videoId },
     },
     {
       new: true,
     }
   );
+
   return res
     .status(200)
-    .json(new ApiResponse(200, playList, "video added to playlist"));
+    .json(new ApiResponse(200, updatedPlaylist, "video added to playlist"));
 });
 const removeVideoFromPlaylist = asyncHandaller(async (req, res) => {
-  const { playlistId, videoId } = req.params;
-  if (!playlistId || !videoId) {
+  const { playListId, videoId } = req.params;
+  if (!playListId || !videoId) {
     throw new ApiError(401, "playlist and video id is required");
   }
   const playList = await Playlist.findByIdAndUpdate(
-    playlistId,
+    playListId,
     {
       $unset: { videos: videoId },
     },
@@ -78,29 +92,29 @@ const removeVideoFromPlaylist = asyncHandaller(async (req, res) => {
   );
   return res
     .status(200)
-    .json(new ApiResponse(200, playList, "video remove to playlist"));
+    .json(new ApiResponse(200, { playList }, "video remove to playlist"));
 });
 const deletePlaylist = asyncHandaller(async (req, res) => {
-  const { playlistId } = req.params;
-  if (!playlistId) {
+  const { playListId } = req.params;
+  if (!playListId) {
     throw new ApiError(401, "playlist id is required");
   }
-  const playList = await Playlist.findByIdAndDelete(playlistId);
+  const playList = await Playlist.findByIdAndDelete(playListId);
   return res
     .status(200)
     .json(new ApiResponse(200, playList, "playlist deleted successfully"));
 });
 const updatePlaylist = asyncHandaller(async (req, res) => {
-  const { playlistId } = req.params;
+  const { playListId } = req.params;
   const { description, name } = req.body;
-  if (!playlistId) {
+  if (!playListId) {
     throw new ApiError(401, "playlist id is required");
   }
   if (!name || !description) {
     throw new ApiError(401, "name and descriptions are requird");
   }
   const playList = await Playlist.findByIdAndUpdate(
-    playlistId,
+    playListId,
     {
       $set: { name, description },
     },
