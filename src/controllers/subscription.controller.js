@@ -1,11 +1,11 @@
 import { isValidObjectId } from "mongoose";
-import { Subscription } from "../models/subscription.model.js";
+import { Subscription } from "../models/subsCriptions.model.js";
 import { User } from "../models/user.model.js";
-import { ApiError } from "../utils/ApiError.js";
-import { ApiResponse } from "../utils/ApiResponse.js";
-import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiError } from "../utills/ApiError.js";
+import { ApiResponse } from "../utills/ApiResponse.js";
+import { asyncHandaller } from "../utills/asyncHandaller.js";
 
-const toggleSubscription = asyncHandler(async (req, res) => {
+const toggleSubscription = asyncHandaller(async (req, res) => {
   const { channelId } = req.params;
   const subscriberId = req.user?._id;
 
@@ -38,8 +38,7 @@ const toggleSubscription = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, null, "Subscribed successfully"));
 });
 
-// controller to return subscriber list of a channel
-const getUserChannelSubscribers = asyncHandler(async (req, res) => {
+const getUserChannelSubscribers = asyncHandaller(async (req, res) => {
   const { channelId } = req.params;
   if (!isValidObjectId(channelId)) {
     throw new ApiError(400, "invalid channel id");
@@ -59,10 +58,9 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
     );
 });
 
-// controller to return channel list to which user has subscribed
-const getSubscribedChannels = asyncHandler(async (req, res) => {
+const getSubscribedChannels = asyncHandaller(async (req, res) => {
   const { subscriberId } = req.params;
-  if (isValidObjectId(subscriberId)) {
+  if (!isValidObjectId(subscriberId)) {
     throw new ApiError(400, "invalid subscriber id");
   }
   const subscriptions = await Subscription.find({
