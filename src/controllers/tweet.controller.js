@@ -8,6 +8,7 @@ const createTweet = asyncHandaller(async (req, res) => {
   if (!content) {
     throw new ApiError(403, "content is required");
   }
+
   const tweet = await Tweet.create({
     content,
     owner: req.user?._id,
@@ -41,10 +42,12 @@ const updateTweet = asyncHandaller(async (req, res) => {
     {
       new: true,
     }
-  );
+  ).select("-password");
   return res
     .status(200)
-    .json(new ApiResponse(200, tweet, "tweet updated successfully"));
+    .json(
+      new ApiResponse(200, { updateTweet: tweet }, "tweet updated successfully")
+    );
 });
 const deleteTweet = asyncHandaller(async (req, res) => {
   const { tweetId } = req.params;
@@ -54,6 +57,12 @@ const deleteTweet = asyncHandaller(async (req, res) => {
   const tweet = await Tweet.findByIdAndDelete(tweetId);
   return res
     .status(200)
-    .json(new ApiResponse(200, tweet, "tweet deleted successfully"));
+    .json(
+      new ApiResponse(
+        200,
+        { deletedTweet: tweet },
+        "tweet deleted successfully"
+      )
+    );
 });
 export { createTweet, deleteTweet, getAllUserTweet, updateTweet };
