@@ -27,9 +27,14 @@ function Navbar() {
       <div className="mx-auto flex h-16 w-full max-w-[1400px] items-center justify-between px-4 lg:px-8">
         <Link
           to="/"
-          className="font-display text-xl font-semibold tracking-[0.08em] text-white"
+          className="flex items-center gap-3 font-display text-xl font-semibold tracking-[0.08em] text-white"
         >
-          VidVortex
+          <img
+            src="/logo.jpg"
+            alt="VidVortex logo"
+            className="h-9 w-9 rounded-xl border border-white/20 object-cover shadow-cyan"
+          />
+          <span>VidVortex</span>
         </Link>
 
         <nav className="hidden items-center gap-2 md:flex">
