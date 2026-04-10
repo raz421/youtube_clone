@@ -27,6 +27,12 @@ const generateAccessAndTokenRefreshToken = async (userId) => {
     );
   }
 };
+
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+};
+
 const registerController = asyncHandaller(async (req, res) => {
   const { username, email, password, fullname } = req.body;
   console.log(req.body);
@@ -49,14 +55,19 @@ const registerController = asyncHandaller(async (req, res) => {
   ) {
     coverImageLocalPath = req.files.coverImage[0].path;
   }
-  if (!avatarLocalPath) {
-    throw new ApiError(400, "local avatar is required");
-  }
+  const avatar = avatarLocalPath
+    ? await uploadToCloudinary(avatarLocalPath)
+    : {
+        url: `https://api.dicebear.com/8.x/glass/svg?seed=${encodeURIComponent(
+          username
+        )}`,
+      };
 
-  const avatar = await uploadToCloudinary(avatarLocalPath);
-  const coverImage = await uploadToCloudinary(coverImageLocalPath);
+  const coverImage = coverImageLocalPath
+    ? await uploadToCloudinary(coverImageLocalPath)
+    : null;
 
-  if (!avatar) {
+  if (!avatar?.url) {
     throw new ApiError(400, "avatar is required");
   }
   const user = await User.create({
@@ -95,14 +106,10 @@ const loginController = asyncHandaller(async (req, res) => {
   const loggedInUser = await User.findById(user._id).select(
     "-password -refreshToken"
   );
-  const options = {
-    httpOnly: true,
-    secure: true,
-  };
   res
     .status(200)
-    .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
+    .cookie("accessToken", accessToken, cookieOptions)
+    .cookie("refreshToken", refreshToken, cookieOptions)
     .json(
       new ApiResponse(
         200,
@@ -127,14 +134,10 @@ const logoutController = asyncHandaller(async (req, res) => {
       new: true,
     }
   );
-  const options = {
-    httpOnly: true,
-    secure: true,
-  };
   res
     .status(200)
-    .clearCookie("accessToken", options)
-    .clearCookie("refreshToken", options)
+    .clearCookie("accessToken", cookieOptions)
+    .clearCookie("refreshToken", cookieOptions)
     .json(new ApiResponse(200, {}, "log out successfully"));
 });
 const refreshAccessToken = asyncHandaller(async (req, res) => {
@@ -156,16 +159,12 @@ const refreshAccessToken = asyncHandaller(async (req, res) => {
       throw new ApiError(401, "refresh token is expired or used");
     }
 
-    const options = {
-      httpOnly: true,
-      secure: true,
-    };
     const { accessToken, refreshToken } =
       await generateAccessAndTokenRefreshToken(user._id);
     return res
       .status(200)
-      .cookie("accessToken", accessToken, options)
-      .cookie("refreshToken", refreshToken, options)
+      .cookie("accessToken", accessToken, cookieOptions)
+      .cookie("refreshToken", refreshToken, cookieOptions)
       .json(
         new ApiResponse(
           200,

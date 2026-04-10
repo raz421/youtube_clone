@@ -1,0 +1,95 @@
+@import url("https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color: #e6e6fa;
+  font-family: "Space Grotesk", sans-serif;
+  background: radial-gradient(
+    circle at 20% 20%,
+    #1a0b2e 0%,
+    #0a0a0b 40%,
+    #050505 100%
+  );
+  scroll-behavior: smooth;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(
+    circle at 20% 20%,
+    #1a0b2e 0%,
+    #0a0a0b 40%,
+    #050505 100%
+  );
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image: radial-gradient(
+    rgba(255, 255, 255, 0.08) 0.5px,
+    transparent 0.5px
+  );
+  background-size: 3px 3px;
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.glass-panel {
+  @apply rounded-3xl border border-white/10 bg-brand-surface backdrop-blur-xl;
+}
+
+.glass-panel-strong {
+  @apply rounded-3xl border border-white/20 bg-[rgba(18,18,28,0.72)] backdrop-blur-2xl;
+}
+
+@keyframes drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(12px, -8px, 0) scale(1.04);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+.ambient-drift {
+  animation: drift 8s ease-in-out infinite;
+}
+
+.soft-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #9d4edd66 transparent;
+}
+
+.soft-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.soft-scroll::-webkit-scrollbar-thumb {
+  background: rgba(157, 78, 221, 0.45);
+  border-radius: 999px;
+}
