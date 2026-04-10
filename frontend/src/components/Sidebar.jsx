@@ -1,10 +1,13 @@
+import { Link } from "react-router-dom";
 import { useAppStore } from "../store/appStore.js";
+import { useAuthStore } from "../store/authStore.js";
 
 const moods = ["All", "Focus", "Learn", "Relax"];
 
 function Sidebar() {
   const activeMood = useAppStore((state) => state.activeMood);
   const setActiveMood = useAppStore((state) => state.setActiveMood);
+  const user = useAuthStore((state) => state.user);
 
   return (
     <aside className="glass-panel-strong hidden h-fit p-5 lg:block">
@@ -29,6 +32,20 @@ function Sidebar() {
           </button>
         ))}
       </div>
+
+      {user ? (
+        <div className="mt-7 border-t border-white/10 pt-4">
+          <p className="mb-2 text-xs uppercase tracking-[0.2em] text-brand-muted">
+            Account
+          </p>
+          <Link
+            to="/settings"
+            className="block w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-brand-muted transition hover:border-brand-accent/60 hover:text-white"
+          >
+            Settings
+          </Link>
+        </div>
+      ) : null}
     </aside>
   );
 }

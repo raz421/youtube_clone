@@ -31,6 +31,18 @@ function Login() {
   return (
     <section className="mx-auto max-w-lg">
       <div className="glass-panel p-8">
+        <div className="mb-5 flex items-center gap-3">
+          <img
+            src="/logo.jpg"
+            alt="VidVortex logo"
+            className="h-10 w-10 rounded-xl border border-white/20 object-cover shadow-cyan"
+          />
+          <div>
+            <p className="font-display text-lg text-white">VidVortex</p>
+            <p className="text-xs text-brand-muted">Premium Creator Platform</p>
+          </div>
+        </div>
+
         <p className="text-xs uppercase tracking-[0.28em] text-brand-accent">
           VidVortex Account
         </p>

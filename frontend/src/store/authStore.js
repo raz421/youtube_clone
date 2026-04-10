@@ -149,5 +149,24 @@ export const useAuthStore = create((set, get) => ({
     set({ user: null, accessToken: "", refreshToken: "" });
   },
 
+  refreshUser: async () => {
+    try {
+      const profileResponse = await api.get("/api/v1/users/current-user");
+      const user = extractResponseData(profileResponse);
+      set({ user });
+      return { ok: true, user };
+    } catch (error) {
+      return {
+        ok: false,
+        message: error?.response?.data?.message || "Unable to refresh user",
+      };
+    }
+  },
+
+  patchUser: (partialUser) =>
+    set((state) => ({
+      user: state.user ? { ...state.user, ...partialUser } : partialUser,
+    })),
+
   isAuthenticated: () => Boolean(get().user && get().accessToken),
 }));
