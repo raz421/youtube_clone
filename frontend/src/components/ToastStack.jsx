@@ -22,10 +22,10 @@ function ToastStack() {
       {toasts.map((toast) => (
         <div
           key={toast.id}
-          className={`min-w-[220px] rounded-xl border px-4 py-3 text-sm shadow-xl backdrop-blur ${
+          className={`min-w-[220px] rounded-xl border px-4 py-3 text-sm font-medium text-white shadow-xl backdrop-blur ${
             toast.type === "error"
-              ? "border-rose-300/40 bg-rose-500/20 text-rose-100"
-              : "border-cyan-300/40 bg-cyan-500/20 text-cyan-100"
+              ? "border-rose-300/40 bg-rose-500/80 shadow-rose-500/20"
+              : "border-emerald-300/40 bg-emerald-500/80 shadow-emerald-500/20"
           }`}
         >
           {toast.message}

@@ -12,6 +12,9 @@ export default {
           surface: "rgba(24, 24, 36, 0.6)",
         },
       },
+      spacing: {
+        18: "4.5rem",
+      },
       fontFamily: {
         display: ["Sora", "sans-serif"],
         body: ["Space Grotesk", "sans-serif"],

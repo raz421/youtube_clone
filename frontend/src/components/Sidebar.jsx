@@ -24,7 +24,7 @@ function Sidebar() {
             onClick={() => setActiveMood(mood)}
             className={`w-full rounded-2xl border px-4 py-2 text-left text-sm transition ${
               activeMood === mood
-                ? "border-brand-accent bg-brand-accent/20 text-white shadow-cyan"
+                ? "border-brand-base bg-brand-base/20 text-white shadow-glow"
                 : "border-white/10 bg-brand-surface text-brand-muted hover:text-white"
             }`}
           >
@@ -51,4 +51,3 @@ function Sidebar() {
 }
 
 export default Sidebar;
-

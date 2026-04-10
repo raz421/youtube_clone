@@ -8,7 +8,7 @@ function AnimatedButton({ children, className = "", ...props }) {
   return (
     <button
       ref={ref}
-      className={`rounded-full border border-white/20 bg-white/10 px-5 py-2 text-sm font-medium text-brand-ink shadow-glow transition hover:bg-white/20 ${className}`}
+      className={`rounded-lg border border-brand-base/60 bg-brand-base px-6 py-2 text-sm font-semibold text-white shadow-lg shadow-brand-base/20 transition-all duration-300 hover:border-brand-base hover:shadow-xl hover:shadow-brand-base/40 hover:scale-105 active:scale-95 ${className}`}
       {...props}
     >
       {children}
