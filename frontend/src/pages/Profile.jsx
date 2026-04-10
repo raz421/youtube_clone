@@ -61,7 +61,7 @@ function Profile() {
         </p>
 
         <div className="mt-6 grid gap-4 md:grid-cols-3">
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="rounded-2xl border border-white/10 bg-brand-surface p-4">
             <p className="text-xs uppercase tracking-[0.2em] text-brand-muted">
               Watch Time
             </p>
@@ -69,7 +69,7 @@ function Profile() {
               {analytics.totalMinutes || watchAnalytics.totalMinutes} min
             </p>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="rounded-2xl border border-white/10 bg-brand-surface p-4">
             <p className="text-xs uppercase tracking-[0.2em] text-brand-muted">
               Watch Sessions
             </p>
@@ -77,7 +77,7 @@ function Profile() {
               {analytics.totalSessions || watchAnalytics.streakDays}
             </p>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="rounded-2xl border border-white/10 bg-brand-surface p-4">
             <p className="text-xs uppercase tracking-[0.2em] text-brand-muted">
               Completion
             </p>
@@ -111,7 +111,7 @@ function Profile() {
           {uploadedVideos.slice(0, 8).map((video) => (
             <div
               key={video.id || video._id}
-              className="rounded-2xl border border-white/10 bg-white/5 p-3"
+              className="rounded-2xl border border-white/10 bg-brand-surface p-3"
             >
               <p className="line-clamp-1 text-sm text-white">{video.title}</p>
               <p className="mt-1 text-xs text-brand-muted">
@@ -126,3 +126,4 @@ function Profile() {
 }
 
 export default Profile;
+

@@ -147,7 +147,7 @@ function Home() {
         ) : null}
 
         <div className="hero-reveal mt-8 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="rounded-2xl border border-white/10 bg-brand-surface p-4">
             <p className="text-xs uppercase tracking-[0.2em] text-brand-muted">
               Smart Preview
             </p>
@@ -155,7 +155,7 @@ function Home() {
               Instant hover autoplay with adaptive glow.
             </p>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="rounded-2xl border border-white/10 bg-brand-surface p-4">
             <p className="text-xs uppercase tracking-[0.2em] text-brand-muted">
               AI Summary
             </p>
@@ -163,7 +163,7 @@ function Home() {
               Quickly grasp each video before diving in.
             </p>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="rounded-2xl border border-white/10 bg-brand-surface p-4">
             <p className="text-xs uppercase tracking-[0.2em] text-brand-muted">
               Mood Discovery
             </p>
@@ -214,7 +214,7 @@ function Home() {
             (chip) => (
               <span
                 key={chip}
-                className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-brand-muted"
+                className="rounded-full border border-white/15 bg-brand-surface px-3 py-1 text-xs text-brand-muted"
               >
                 {chip}
               </span>
@@ -237,3 +237,4 @@ function Home() {
 }
 
 export default Home;
+

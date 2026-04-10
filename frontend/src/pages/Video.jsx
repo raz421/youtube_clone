@@ -168,7 +168,7 @@ function Video() {
               {timelineMoments.map((moment) => (
                 <div
                   key={`${moment.time}-${moment.label}`}
-                  className="rounded-2xl border border-white/10 bg-white/5 p-3"
+                  className="rounded-2xl border border-white/10 bg-brand-surface p-3"
                 >
                   <p className="text-sm text-white">{moment.time}</p>
                   <p className="text-xs text-brand-muted">{moment.label}</p>
@@ -198,7 +198,7 @@ function Video() {
             {(video.comments || []).map((comment) => (
               <div
                 key={comment._id}
-                className="rounded-xl border border-white/10 bg-white/5 p-3"
+                className="rounded-xl border border-white/10 bg-brand-surface p-3"
               >
                 <p className="text-sm text-brand-ink">{comment.content}</p>
                 <p className="mt-1 text-xs text-brand-muted">
@@ -231,3 +231,4 @@ function Video() {
 }
 
 export default Video;
+

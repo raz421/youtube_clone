@@ -25,7 +25,7 @@ function Sidebar() {
             className={`w-full rounded-2xl border px-4 py-2 text-left text-sm transition ${
               activeMood === mood
                 ? "border-brand-accent bg-brand-accent/20 text-white shadow-cyan"
-                : "border-white/10 bg-white/5 text-brand-muted hover:text-white"
+                : "border-white/10 bg-brand-surface text-brand-muted hover:text-white"
             }`}
           >
             {mood}
@@ -40,7 +40,7 @@ function Sidebar() {
           </p>
           <Link
             to="/settings"
-            className="block w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-brand-muted transition hover:border-brand-accent/60 hover:text-white"
+            className="block w-full rounded-2xl border border-white/10 bg-brand-surface px-4 py-2 text-sm text-brand-muted transition hover:border-brand-accent/60 hover:text-white"
           >
             Settings
           </Link>
@@ -51,3 +51,4 @@ function Sidebar() {
 }
 
 export default Sidebar;
+

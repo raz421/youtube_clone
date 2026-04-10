@@ -76,7 +76,7 @@ function Navbar() {
               <button
                 type="button"
                 onClick={() => setOpenMenu((prev) => !prev)}
-                className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-2 py-1 transition hover:bg-white/10"
+                className="flex items-center gap-2 rounded-full border border-white/15 bg-brand-surface px-2 py-1 transition hover:bg-white/10"
               >
                 <img
                   src={user.avatar || "/logo.jpg"}
@@ -140,3 +140,4 @@ function Navbar() {
 }
 
 export default Navbar;
+

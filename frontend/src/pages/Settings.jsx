@@ -126,14 +126,14 @@ function Settings() {
             value={fullname}
             onChange={(event) => setFullname(event.target.value)}
             placeholder="Full name"
-            className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white outline-none"
+            className="w-full rounded-xl border border-white/15 bg-brand-surface px-4 py-3 text-sm text-white outline-none"
           />
           <input
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             placeholder="Email"
-            className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white outline-none"
+            className="w-full rounded-xl border border-white/15 bg-brand-surface px-4 py-3 text-sm text-white outline-none"
           />
           <button
             type="submit"
@@ -175,14 +175,14 @@ function Settings() {
             value={oldPassword}
             onChange={(event) => setOldPassword(event.target.value)}
             placeholder="Current password"
-            className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white outline-none"
+            className="w-full rounded-xl border border-white/15 bg-brand-surface px-4 py-3 text-sm text-white outline-none"
           />
           <input
             type="password"
             value={newPassword}
             onChange={(event) => setNewPassword(event.target.value)}
             placeholder="New password"
-            className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white outline-none"
+            className="w-full rounded-xl border border-white/15 bg-brand-surface px-4 py-3 text-sm text-white outline-none"
           />
         </div>
 
@@ -199,3 +199,4 @@ function Settings() {
 }
 
 export default Settings;
+

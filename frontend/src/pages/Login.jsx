@@ -58,14 +58,14 @@ function Login() {
             placeholder="Username or email"
             value={identifier}
             onChange={(event) => setIdentifier(event.target.value)}
-            className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white outline-none"
+            className="w-full rounded-xl border border-white/15 bg-brand-surface px-4 py-3 text-sm text-white outline-none"
           />
           <input
             type="password"
             placeholder="Password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white outline-none"
+            className="w-full rounded-xl border border-white/15 bg-brand-surface px-4 py-3 text-sm text-white outline-none"
           />
 
           <AnimatedButton
@@ -89,3 +89,4 @@ function Login() {
 }
 
 export default Login;
+
