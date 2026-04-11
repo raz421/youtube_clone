@@ -11,6 +11,7 @@ const getStoredLibrary = () => {
         watchHistory: [],
         likedVideos: [],
         watchLater: [],
+        downloadedVideos: [],
         dislikedVideos: [],
         likedComments: [],
       };
@@ -23,6 +24,9 @@ const getStoredLibrary = () => {
         : [],
       likedVideos: Array.isArray(parsed.likedVideos) ? parsed.likedVideos : [],
       watchLater: Array.isArray(parsed.watchLater) ? parsed.watchLater : [],
+      downloadedVideos: Array.isArray(parsed.downloadedVideos)
+        ? parsed.downloadedVideos
+        : [],
       dislikedVideos: Array.isArray(parsed.dislikedVideos)
         ? parsed.dislikedVideos
         : [],
@@ -35,6 +39,7 @@ const getStoredLibrary = () => {
       watchHistory: [],
       likedVideos: [],
       watchLater: [],
+      downloadedVideos: [],
       dislikedVideos: [],
       likedComments: [],
     };
@@ -48,6 +53,7 @@ const persistLibrary = (state) => {
       watchHistory: state.watchHistory,
       likedVideos: state.likedVideos,
       watchLater: state.watchLater,
+      downloadedVideos: state.downloadedVideos,
       dislikedVideos: state.dislikedVideos,
       likedComments: state.likedComments,
     })
@@ -60,6 +66,7 @@ export const useAppStore = create((set) => ({
   videos: [],
   recommendations: [],
   activeMood: "All",
+  activeLibraryView: "all",
   adaptiveGlow: "#9D4EDD",
   watchAnalytics: {
     totalMinutes: 0,
@@ -69,6 +76,7 @@ export const useAppStore = create((set) => ({
   watchHistory: initialLibrary.watchHistory,
   likedVideos: initialLibrary.likedVideos,
   watchLater: initialLibrary.watchLater,
+  downloadedVideos: initialLibrary.downloadedVideos,
   dislikedVideos: initialLibrary.dislikedVideos,
   likedComments: initialLibrary.likedComments,
   toasts: [],
@@ -82,6 +90,7 @@ export const useAppStore = create((set) => ({
     })),
   setRecommendations: (recommendations) => set({ recommendations }),
   setActiveMood: (activeMood) => set({ activeMood }),
+  setActiveLibraryView: (activeLibraryView) => set({ activeLibraryView }),
   setAdaptiveGlow: (adaptiveGlow) => set({ adaptiveGlow }),
   updateWatchAnalytics: (minutesWatched) =>
     set((state) => {
@@ -199,6 +208,82 @@ export const useAppStore = create((set) => ({
           ? state.likedComments.filter((id) => id !== commentId)
           : [commentId, ...state.likedComments],
       };
+      persistLibrary(nextState);
+      return nextState;
+    }),
+  addDownloadedVideo: (video) =>
+    set((state) => {
+      const videoId = video?.id || video?._id;
+      if (!videoId) {
+        return state;
+      }
+
+      const exists = state.downloadedVideos.some(
+        (item) => (item.id || item._id) === videoId
+      );
+
+      if (exists) {
+        return state;
+      }
+
+      const nextState = {
+        ...state,
+        downloadedVideos: [
+          { ...video, _downloadedAt: Date.now() },
+          ...state.downloadedVideos,
+        ].slice(0, 100),
+      };
+
+      persistLibrary(nextState);
+      return nextState;
+    }),
+  removeDownloadedVideo: (videoId) =>
+    set((state) => {
+      if (!videoId) {
+        return state;
+      }
+
+      const nextState = {
+        ...state,
+        downloadedVideos: state.downloadedVideos.filter(
+          (item) => (item.id || item._id) !== videoId
+        ),
+      };
+
+      persistLibrary(nextState);
+      return nextState;
+    }),
+  removeVideoFromLibrary: (videoId) =>
+    set((state) => {
+      if (!videoId) {
+        return state;
+      }
+
+      const nextState = {
+        ...state,
+        videos: state.videos.filter(
+          (item) => (item.id || item._id) !== videoId
+        ),
+        recommendations: state.recommendations.filter(
+          (item) => (item.id || item._id) !== videoId
+        ),
+        watchHistory: state.watchHistory.filter(
+          (item) => (item.id || item._id) !== videoId
+        ),
+        likedVideos: state.likedVideos.filter(
+          (item) => (item.id || item._id) !== videoId
+        ),
+        watchLater: state.watchLater.filter(
+          (item) => (item.id || item._id) !== videoId
+        ),
+        downloadedVideos: state.downloadedVideos.filter(
+          (item) => (item.id || item._id) !== videoId
+        ),
+        dislikedVideos: state.dislikedVideos.filter(
+          (item) => (item.id || item._id) !== videoId
+        ),
+      };
+
       persistLibrary(nextState);
       return nextState;
     }),

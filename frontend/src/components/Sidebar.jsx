@@ -7,7 +7,21 @@ const moods = ["All", "Focus", "Learn", "Relax"];
 function Sidebar() {
   const activeMood = useAppStore((state) => state.activeMood);
   const setActiveMood = useAppStore((state) => state.setActiveMood);
+  const activeLibraryView = useAppStore((state) => state.activeLibraryView);
+  const setActiveLibraryView = useAppStore(
+    (state) => state.setActiveLibraryView
+  );
+  const watchHistoryCount = useAppStore((state) => state.watchHistory.length);
+  const watchLaterCount = useAppStore((state) => state.watchLater.length);
+  const downloadedCount = useAppStore((state) => state.downloadedVideos.length);
   const user = useAuthStore((state) => state.user);
+
+  const libraryItems = [
+    { key: "all", label: "All Videos" },
+    { key: "history", label: "History", count: watchHistoryCount },
+    { key: "watchLater", label: "Watch Later", count: watchLaterCount },
+    { key: "downloads", label: "Downloads", count: downloadedCount },
+  ];
 
   return (
     <aside className="glass-panel-strong hidden h-fit p-5 lg:block">
@@ -38,6 +52,27 @@ function Sidebar() {
           <p className="mb-2 text-xs uppercase tracking-[0.2em] text-brand-muted">
             Account
           </p>
+          <div className="mb-3 space-y-2">
+            {libraryItems.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => setActiveLibraryView(item.key)}
+                className={`flex w-full items-center justify-between rounded-2xl border px-4 py-2 text-sm transition ${
+                  activeLibraryView === item.key
+                    ? "border-brand-base bg-brand-base/20 text-white shadow-glow"
+                    : "border-white/10 bg-brand-surface text-brand-muted hover:text-white"
+                }`}
+              >
+                <span>{item.label}</span>
+                {typeof item.count === "number" ? (
+                  <span className="rounded-full border border-white/20 px-2 py-0.5 text-[10px]">
+                    {item.count}
+                  </span>
+                ) : null}
+              </button>
+            ))}
+          </div>
           <NavLink
             to="/settings"
             className={({ isActive, isPending }) =>

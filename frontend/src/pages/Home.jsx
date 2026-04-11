@@ -6,6 +6,7 @@ import SkeletonCard from "../components/SkeletonCard.jsx";
 import VideoCard from "../components/VideoCard.jsx";
 import { api, extractResponseData } from "../lib/api.js";
 import { useAppStore } from "../store/appStore.js";
+import { useAuthStore } from "../store/authStore.js";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -22,9 +23,20 @@ function Home() {
   const setVideos = useAppStore((state) => state.setVideos);
   const setRecommendations = useAppStore((state) => state.setRecommendations);
   const activeMood = useAppStore((state) => state.activeMood);
+  const activeLibraryView = useAppStore((state) => state.activeLibraryView);
+  const watchHistory = useAppStore((state) => state.watchHistory);
+  const watchLater = useAppStore((state) => state.watchLater);
+  const downloadedVideos = useAppStore((state) => state.downloadedVideos);
+  const removeDownloadedVideo = useAppStore(
+    (state) => state.removeDownloadedVideo
+  );
+  const removeVideoFromLibrary = useAppStore(
+    (state) => state.removeVideoFromLibrary
+  );
   const adaptiveGlow = useAppStore((state) => state.adaptiveGlow);
   const setAdaptiveGlow = useAppStore((state) => state.setAdaptiveGlow);
   const addToast = useAppStore((state) => state.addToast);
+  const user = useAuthStore((state) => state.user);
 
   useEffect(() => {
     let mounted = true;
@@ -97,16 +109,48 @@ function Home() {
     }
   }, [videos]);
 
-  const filteredVideos = useMemo(() => {
-    if (activeMood === "All") {
-      return videos;
+  const sourceVideos = useMemo(() => {
+    if (activeLibraryView === "history") {
+      return watchHistory;
     }
 
-    return videos.filter(
+    if (activeLibraryView === "watchLater") {
+      return watchLater;
+    }
+
+    if (activeLibraryView === "downloads") {
+      return downloadedVideos;
+    }
+
+    return videos;
+  }, [activeLibraryView, downloadedVideos, videos, watchHistory, watchLater]);
+
+  const filteredVideos = useMemo(() => {
+    if (activeMood === "All") {
+      return sourceVideos;
+    }
+
+    return sourceVideos.filter(
       (video) =>
         String(video.mood || "").toLowerCase() === activeMood.toLowerCase()
     );
-  }, [activeMood, videos]);
+  }, [activeMood, sourceVideos]);
+
+  const sectionTitle = useMemo(() => {
+    if (activeLibraryView === "history") {
+      return "Watch History";
+    }
+
+    if (activeLibraryView === "watchLater") {
+      return "Watch Later";
+    }
+
+    if (activeLibraryView === "downloads") {
+      return "Downloaded Videos";
+    }
+
+    return "Trending Picks";
+  }, [activeLibraryView]);
 
   const featured = filteredVideos[0];
 
@@ -134,6 +178,41 @@ function Home() {
       addToast("success", `Roulette Pick: ${pick.title}`);
       navigate(`/video/${pickId}`);
     }, 550);
+  };
+
+  const handleRemoveDownloaded = (videoId) => {
+    removeDownloadedVideo(videoId);
+    addToast("success", "Removed from downloads");
+  };
+
+  const handlePermanentDelete = async (video) => {
+    const videoId = video?.id || video?._id;
+    if (!videoId) {
+      return;
+    }
+
+    const ownerId =
+      typeof video?.owner === "object" ? video?.owner?._id : video?.owner;
+
+    if (!user?._id || String(ownerId) !== String(user._id)) {
+      addToast("error", "Only the owner can delete this video");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Delete this video permanently? This action cannot be undone."
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await api.delete(`/api/v1/video/v/video-delete/${videoId}`);
+      removeVideoFromLibrary(videoId);
+      addToast("success", "Video deleted permanently");
+    } catch {
+      addToast("error", "Unable to delete video right now");
+    }
   };
 
   return (
@@ -235,7 +314,7 @@ function Home() {
 
       <section>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-display text-2xl text-white">Trending Picks</h2>
+          <h2 className="font-display text-2xl text-white">{sectionTitle}</h2>
           <span className="text-sm text-brand-muted">
             {filteredVideos.length} videos
           </span>
@@ -250,18 +329,51 @@ function Home() {
             ? Array.from({ length: 6 }).map((_, index) => (
                 <SkeletonCard key={index} />
               ))
-            : filteredVideos.map((video) => (
-                <VideoCard
-                  key={video.id || video._id}
-                  video={video}
-                  onThemeChange={setAdaptiveGlow}
-                />
-              ))}
+            : filteredVideos.map((video) => {
+                const videoId = video.id || video._id;
+                const ownerId =
+                  typeof video.owner === "object"
+                    ? video.owner?._id
+                    : video.owner;
+                const canDeletePermanently =
+                  activeLibraryView === "all" &&
+                  user?._id &&
+                  ownerId &&
+                  String(ownerId) === String(user._id);
+
+                return (
+                  <div key={videoId} className="space-y-2">
+                    <VideoCard video={video} onThemeChange={setAdaptiveGlow} />
+
+                    {activeLibraryView === "downloads" ? (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveDownloaded(videoId)}
+                        className="w-full rounded-xl border border-brand-base/60 bg-brand-base/20 px-3 py-2 text-xs text-white transition hover:bg-brand-base/30"
+                      >
+                        Remove From Downloads
+                      </button>
+                    ) : null}
+
+                    {canDeletePermanently ? (
+                      <button
+                        type="button"
+                        onClick={() => handlePermanentDelete(video)}
+                        className="w-full rounded-xl border border-rose-400/55 bg-rose-500/20 px-3 py-2 text-xs text-rose-100 transition hover:bg-rose-500/30"
+                      >
+                        Delete Video Permanently
+                      </button>
+                    ) : null}
+                  </div>
+                );
+              })}
         </div>
 
         {!loading && !filteredVideos.length ? (
           <div className="glass-panel mt-6 p-8 text-center text-brand-muted">
-            No videos match this mood yet.
+            {activeLibraryView === "all"
+              ? "No videos match this mood yet."
+              : "No videos in this section yet."}
           </div>
         ) : null}
       </section>

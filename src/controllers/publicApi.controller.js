@@ -49,6 +49,26 @@ const serializeVideo = (videoDoc) => {
   };
 };
 
+const serializeComment = (commentDoc) => {
+  const data = commentDoc?.toObject ? commentDoc.toObject() : commentDoc;
+  const owner = data?.owner;
+
+  return {
+    _id: data?._id,
+    content: data?.content,
+    createdAt: data?.createdAt,
+    updatedAt: data?.updatedAt,
+    owner: owner
+      ? {
+          _id: owner?._id || owner,
+          username: owner?.username || "",
+          fullname: owner?.fullname || "",
+          avatar: owner?.avatar || "",
+        }
+      : null,
+  };
+};
+
 const formatClockTime = (seconds) => {
   const total = Math.max(0, Math.floor(seconds));
   const mm = String(Math.floor(total / 60)).padStart(2, "0");
@@ -141,7 +161,11 @@ const getVideoDetails = asyncHandaller(async (req, res) => {
   await Video.findByIdAndUpdate(videoId, { $inc: { views: 1 } });
 
   const [comments, likesCount, watchMoments] = await Promise.all([
-    Comment.find({ video: videoId }).sort({ createdAt: -1 }).limit(40).lean(),
+    Comment.find({ video: videoId })
+      .sort({ createdAt: -1 })
+      .limit(40)
+      .populate("owner", "username fullname avatar")
+      .lean(),
     Like.countDocuments({ video: videoId }),
     getMostWatchedMoments(videoId),
   ]);
@@ -156,7 +180,7 @@ const getVideoDetails = asyncHandaller(async (req, res) => {
         aiSummary:
           "This video breaks the topic into concise, practical moments so you can quickly learn and apply each idea.",
         watchMoments,
-        comments,
+        comments: comments.map((comment) => serializeComment(comment)),
       },
       "Video details fetched successfully"
     )
@@ -256,9 +280,19 @@ const postComment = asyncHandaller(async (req, res) => {
     owner: req.user._id,
   });
 
+  const createdCommentWithOwner = await Comment.findById(createdComment._id)
+    .populate("owner", "username fullname avatar")
+    .lean();
+
   return res
     .status(201)
-    .json(new ApiResponse(201, createdComment, "Comment added successfully"));
+    .json(
+      new ApiResponse(
+        201,
+        serializeComment(createdCommentWithOwner),
+        "Comment added successfully"
+      )
+    );
 });
 
 const getSearchResults = asyncHandaller(async (req, res) => {

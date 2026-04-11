@@ -6,6 +6,33 @@ import { api, extractResponseData } from "../lib/api.js";
 import { useAppStore } from "../store/appStore.js";
 import { useAuthStore } from "../store/authStore.js";
 
+const getCommentOwnerName = (comment) => {
+  const owner = comment?.owner;
+
+  if (owner?.fullname) {
+    return owner.fullname;
+  }
+
+  if (owner?.username) {
+    return owner.username;
+  }
+
+  return "Anonymous";
+};
+
+const formatCommentTimestamp = (value) => {
+  if (!value) {
+    return "Just now";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "Just now";
+  }
+
+  return date.toLocaleString();
+};
+
 function Video() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -24,6 +51,10 @@ function Video() {
   const toggleLikedVideo = useAppStore((state) => state.toggleLikedVideo);
   const toggleDislikedVideo = useAppStore((state) => state.toggleDislikedVideo);
   const toggleLikedComment = useAppStore((state) => state.toggleLikedComment);
+  const addDownloadedVideo = useAppStore((state) => state.addDownloadedVideo);
+  const removeVideoFromLibrary = useAppStore(
+    (state) => state.removeVideoFromLibrary
+  );
   const likedVideos = useAppStore((state) => state.likedVideos);
   const watchLater = useAppStore((state) => state.watchLater);
   const dislikedVideos = useAppStore((state) => state.dislikedVideos);
@@ -93,6 +124,17 @@ function Video() {
     [dislikedVideos, currentVideoId]
   );
 
+  const isOwner = useMemo(() => {
+    const ownerId =
+      typeof video?.owner === "object" ? video?.owner?._id : video?.owner;
+
+    if (!ownerId || !user?._id) {
+      return false;
+    }
+
+    return String(ownerId) === String(user._id);
+  }, [video, user]);
+
   useEffect(() => {
     if (!video?.id && !video?._id) {
       return;
@@ -149,6 +191,12 @@ function Video() {
             _id: Math.random().toString(36).slice(2),
             content: commentDraft,
             createdAt: new Date().toISOString(),
+            owner: {
+              _id: user?._id,
+              username: user?.username || "",
+              fullname: user?.fullname || "",
+              avatar: user?.avatar || "",
+            },
           },
           ...(current?.comments || []),
         ],
@@ -220,6 +268,44 @@ function Video() {
     toggleLikedComment(commentId);
   };
 
+  const handleDownloadVideo = () => {
+    if (!video?.videoFile) {
+      addToast("error", "Video file is not available for download");
+      return;
+    }
+
+    addDownloadedVideo(video);
+    addToast("success", "Saved in VidVortex downloads");
+  };
+
+  const handleDeleteVideo = async () => {
+    if (!requireAuthAction() || !currentVideoId) {
+      return;
+    }
+
+    if (!isOwner) {
+      addToast("error", "Only the owner can delete this video");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Delete this video permanently? This action cannot be undone."
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await api.delete(`/api/v1/video/v/video-delete/${currentVideoId}`);
+      removeVideoFromLibrary(currentVideoId);
+      addToast("success", "Video deleted successfully");
+      navigate("/");
+    } catch (_error) {
+      addToast("error", "Unable to delete this video");
+    }
+  };
+
   if (loading) {
     return <div className="glass-panel h-72 animate-pulse" />;
   }
@@ -276,6 +362,22 @@ function Video() {
             >
               {isInWatchLater ? "Saved" : "Watch Later"}
             </button>
+            <button
+              type="button"
+              onClick={handleDownloadVideo}
+              className="rounded-full border border-cyan-300/45 bg-cyan-400/15 px-4 py-1.5 text-xs text-cyan-100 transition hover:bg-cyan-400/25"
+            >
+              Download Video
+            </button>
+            {isOwner ? (
+              <button
+                type="button"
+                onClick={handleDeleteVideo}
+                className="rounded-full border border-rose-400/55 bg-rose-500/20 px-4 py-1.5 text-xs text-rose-100 transition hover:bg-rose-500/30"
+              >
+                Delete Video
+              </button>
+            ) : null}
           </div>
 
           <div className="mt-6 rounded-2xl border border-brand-accent/30 bg-brand-accent/10 p-4">
@@ -325,10 +427,13 @@ function Video() {
                 key={comment._id}
                 className="rounded-xl border border-white/10 bg-brand-surface p-3"
               >
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-accent">
+                  {getCommentOwnerName(comment)}
+                </p>
                 <p className="text-sm text-brand-ink">{comment.content}</p>
                 <div className="mt-1 flex items-center justify-between">
                   <p className="text-xs text-brand-muted">
-                    {new Date(comment.createdAt).toLocaleString()}
+                    {formatCommentTimestamp(comment.createdAt)}
                   </p>
                   <button
                     type="button"

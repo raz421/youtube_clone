@@ -111,6 +111,17 @@ const deleteVideo = asyncHandaller(async (req, res) => {
   if (!id) {
     throw new ApiError(400, "videoId not found in the url");
   }
+  const video = await Video.findById(id);
+  if (!video) {
+    throw new ApiError(404, "video not found when delete a video");
+  }
+
+  const isOwner = String(video.owner) === String(req.user?._id);
+
+  if (!isOwner) {
+    throw new ApiError(403, "Only the owner can delete this video");
+  }
+
   const deletedVideoInfo = await Video.findByIdAndDelete(id);
   if (!deletedVideoInfo) {
     throw new ApiError(404, "video not found when delete a video");
