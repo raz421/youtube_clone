@@ -66,23 +66,23 @@ function Sidebar() {
                 location.pathname === "/" && activeLibraryView === item.key;
 
               return (
-              <button
-                key={item.key}
-                type="button"
-                onClick={() => handleLibrarySectionOpen(item.key)}
-                className={`flex w-full items-center justify-between rounded-2xl border px-4 py-2 text-sm transition ${
-                  isLibraryActive
-                    ? "border-brand-base bg-brand-base/20 text-white shadow-glow"
-                    : "border-white/10 bg-brand-surface text-brand-muted hover:text-white"
-                }`}
-              >
-                <span>{item.label}</span>
-                {typeof item.count === "number" ? (
-                  <span className="rounded-full border border-white/20 px-2 py-0.5 text-[10px]">
-                    {item.count}
-                  </span>
-                ) : null}
-              </button>
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => handleLibrarySectionOpen(item.key)}
+                  className={`flex w-full items-center justify-between rounded-2xl border px-4 py-2 text-sm transition ${
+                    isLibraryActive
+                      ? "border-brand-base bg-brand-base/20 text-white shadow-glow"
+                      : "border-white/10 bg-brand-surface text-brand-muted hover:text-white"
+                  }`}
+                >
+                  <span>{item.label}</span>
+                  {typeof item.count === "number" ? (
+                    <span className="rounded-full border border-white/20 px-2 py-0.5 text-[10px]">
+                      {item.count}
+                    </span>
+                  ) : null}
+                </button>
               );
             })}
           </div>
