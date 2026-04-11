@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Player from "../components/Player.jsx";
 import VideoCard from "../components/VideoCard.jsx";
@@ -40,6 +40,13 @@ function Video() {
   const [loading, setLoading] = useState(true);
   const [commentDraft, setCommentDraft] = useState("");
   const [error, setError] = useState("");
+  const [userPlaylists, setUserPlaylists] = useState([]);
+  const [playlistName, setPlaylistName] = useState("");
+  const [playlistDescription, setPlaylistDescription] = useState("");
+  const [libraryLoading, setLibraryLoading] = useState(false);
+  const [playlistBusyId, setPlaylistBusyId] = useState("");
+  const [subscriptionBusy, setSubscriptionBusy] = useState(false);
+  const [subscribedChannels, setSubscribedChannels] = useState([]);
 
   const recommendations = useAppStore((state) => state.recommendations);
   const setRecommendations = useAppStore((state) => state.setRecommendations);
@@ -63,6 +70,39 @@ function Video() {
   const addToast = useAppStore((state) => state.addToast);
   const user = useAuthStore((state) => state.user);
 
+  const ownerId = useMemo(() => {
+    if (!video?.owner) {
+      return null;
+    }
+
+    return typeof video.owner === "object" ? video.owner?._id : video.owner;
+  }, [video]);
+
+  const loadViewerLibrary = useCallback(async () => {
+    if (!user?._id) {
+      setUserPlaylists([]);
+      setSubscribedChannels([]);
+      return;
+    }
+
+    setLibraryLoading(true);
+
+    try {
+      const [playlistResponse, subscriptionResponse] = await Promise.all([
+        api.get(`/api/v1/playlist/user-playlist/${user._id}`),
+        api.get(`/api/v1/subcription/subscribed/${user._id}`),
+      ]);
+
+      setUserPlaylists(extractResponseData(playlistResponse) || []);
+      setSubscribedChannels(extractResponseData(subscriptionResponse) || []);
+    } catch (requestError) {
+      setUserPlaylists([]);
+      setSubscribedChannels([]);
+    } finally {
+      setLibraryLoading(false);
+    }
+  }, [user?._id]);
+
   useEffect(() => {
     let mounted = true;
 
@@ -72,7 +112,7 @@ function Video() {
 
       try {
         const [videoRes, recRes] = await Promise.all([
-          api.get(`/videos/${id}`),
+          api.get(`/api/v1/video/v/${id}`),
           api.get("/recommendations"),
         ]);
 
@@ -105,8 +145,24 @@ function Video() {
     };
   }, [id, setRecommendations, trackWatchHistory, updateWatchAnalytics]);
 
+  useEffect(() => {
+    loadViewerLibrary();
+  }, [loadViewerLibrary]);
+
   const timelineMoments = useMemo(() => video?.watchMoments || [], [video]);
   const currentVideoId = video?.id || video?._id;
+  const isSubscribed = useMemo(() => {
+    if (!ownerId) {
+      return false;
+    }
+
+    return subscribedChannels.some((subscription) => {
+      const channel = subscription?.channel;
+      const channelId = channel?._id || channel?.id || channel;
+
+      return String(channelId) === String(ownerId);
+    });
+  }, [ownerId, subscribedChannels]);
 
   const isLiked = useMemo(
     () => likedVideos.some((item) => (item.id || item._id) === currentVideoId),
@@ -178,7 +234,7 @@ function Video() {
     }
 
     try {
-      const response = await api.post("/comment", {
+      const response = await api.post(`/api/v1/comment/add-comment/v/${id}`, {
         videoId: id,
         content: commentDraft,
       });
@@ -268,6 +324,91 @@ function Video() {
     toggleLikedComment(commentId);
   };
 
+  const handleSubscribeToggle = async () => {
+    if (!requireAuthAction() || !ownerId || isOwner) {
+      return;
+    }
+
+    setSubscriptionBusy(true);
+
+    try {
+      await api.post(`/api/v1/subcription/toggle/${ownerId}`);
+      await loadViewerLibrary();
+      addToast(
+        "success",
+        isSubscribed ? "Unsubscribed successfully" : "Subscribed successfully"
+      );
+    } catch (_error) {
+      addToast("error", "Unable to update subscription right now");
+    } finally {
+      setSubscriptionBusy(false);
+    }
+  };
+
+  const handleCreatePlaylist = async (event) => {
+    event.preventDefault();
+
+    if (!requireAuthAction()) {
+      return;
+    }
+
+    if (!playlistName.trim() || !playlistDescription.trim()) {
+      addToast("error", "Playlist name and description are required");
+      return;
+    }
+
+    try {
+      const response = await api.post("/api/v1/playlist/create-playlist", {
+        name: playlistName,
+        description: playlistDescription,
+      });
+
+      const createdPlaylist = extractResponseData(response);
+      setUserPlaylists((current) => [createdPlaylist, ...(current || [])]);
+      setPlaylistName("");
+      setPlaylistDescription("");
+      addToast("success", "Playlist created");
+    } catch (_error) {
+      addToast("error", "Unable to create playlist");
+    }
+  };
+
+  const handlePlaylistVideoToggle = async (playlistId) => {
+    if (!requireAuthAction() || !playlistId || !currentVideoId) {
+      return;
+    }
+
+    const playlist = userPlaylists.find(
+      (item) => String(item._id || item.id) === String(playlistId)
+    );
+    const hasVideo = (playlist?.videos || []).some((item) => {
+      const itemId = item?._id || item?.id || item;
+      return String(itemId) === String(currentVideoId);
+    });
+
+    setPlaylistBusyId(playlistId);
+
+    try {
+      if (hasVideo) {
+        await api.delete(
+          `/api/v1/playlist/remove-video-from-playlist/${playlistId}/${currentVideoId}`
+        );
+        addToast("success", "Removed from playlist");
+      } else {
+        await api.post(
+          `/api/v1/playlist/add-video-to-playlist/${playlistId}/${currentVideoId}`
+        );
+        addToast("success", "Added to playlist");
+      }
+
+      await loadViewerLibrary();
+    } catch (_error) {
+      addToast("error", "Unable to update playlist right now");
+    } finally {
+      setPlaylistBusyId("");
+    }
+  };
+
   const handleDownloadVideo = () => {
     if (!video?.videoFile) {
       addToast("error", "Video file is not available for download");
@@ -328,14 +469,14 @@ function Video() {
           <p className="mt-2 text-sm text-brand-muted">{video.views} views</p>
           <p className="mt-4 text-brand-muted">{video.description}</p>
 
-          <div className="mt-5 flex flex-wrap gap-2">
+          <div className="mt-5 flex flex-wrap items-center gap-2.5 rounded-2xl border border-white/10 bg-[linear-gradient(120deg,rgba(126,34,206,0.18),rgba(30,27,75,0.2),rgba(6,10,24,0.7))] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_14px_30px_rgba(0,0,0,0.28)] sm:gap-3">
             <button
               type="button"
               onClick={handleVideoLikeToggle}
-              className={`rounded-full border px-4 py-1.5 text-xs transition ${
+              className={`video-action-btn min-h-9 whitespace-nowrap rounded-full border px-4 py-2 text-[11px] font-semibold tracking-[0.01em] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_22px_rgba(0,0,0,0.3)] sm:text-xs ${
                 isLiked
-                  ? "border-brand-base bg-brand-base/25 text-white"
-                  : "border-white/15 bg-brand-surface text-brand-muted hover:text-white"
+                  ? "border-fuchsia-300/70 bg-gradient-to-r from-fuchsia-600 to-violet-600 text-white"
+                  : "border-white/20 bg-gradient-to-r from-violet-700/80 to-purple-700/80 text-white/90 hover:border-violet-300/60"
               }`}
             >
               {isLiked ? "Liked" : "Like Video"}
@@ -343,10 +484,10 @@ function Video() {
             <button
               type="button"
               onClick={handleVideoDislikeToggle}
-              className={`rounded-full border px-4 py-1.5 text-xs transition ${
+              className={`video-action-btn min-h-9 whitespace-nowrap rounded-full border px-4 py-2 text-[11px] font-semibold tracking-[0.01em] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_22px_rgba(0,0,0,0.3)] sm:text-xs ${
                 isDisliked
-                  ? "border-rose-400/60 bg-rose-500/20 text-rose-200"
-                  : "border-white/15 bg-brand-surface text-brand-muted hover:text-white"
+                  ? "border-rose-300/80 bg-gradient-to-r from-rose-600 to-pink-600 text-white"
+                  : "border-white/20 bg-gradient-to-r from-violet-700/80 to-purple-700/80 text-white/90 hover:border-rose-300/65"
               }`}
             >
               {isDisliked ? "Disliked" : "Dislike Video"}
@@ -354,10 +495,10 @@ function Video() {
             <button
               type="button"
               onClick={handleWatchLaterToggle}
-              className={`rounded-full border px-4 py-1.5 text-xs transition ${
+              className={`video-action-btn min-h-9 whitespace-nowrap rounded-full border px-4 py-2 text-[11px] font-semibold tracking-[0.01em] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_22px_rgba(0,0,0,0.3)] sm:text-xs ${
                 isInWatchLater
-                  ? "border-brand-accent/60 bg-brand-accent/15 text-brand-accent"
-                  : "border-white/15 bg-brand-surface text-brand-muted hover:text-white"
+                  ? "border-cyan-300/80 bg-gradient-to-r from-cyan-600 to-sky-600 text-white"
+                  : "border-white/20 bg-gradient-to-r from-violet-700/80 to-purple-700/80 text-white/90 hover:border-cyan-300/65"
               }`}
             >
               {isInWatchLater ? "Saved" : "Watch Later"}
@@ -365,7 +506,7 @@ function Video() {
             <button
               type="button"
               onClick={handleDownloadVideo}
-              className="rounded-full border border-cyan-300/45 bg-cyan-400/15 px-4 py-1.5 text-xs text-cyan-100 transition hover:bg-cyan-400/25"
+              className="video-action-btn min-h-9 whitespace-nowrap rounded-full border border-cyan-300/75 bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-2 text-[11px] font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 hover:brightness-110 hover:shadow-[0_10px_22px_rgba(6,182,212,0.3)] sm:text-xs"
             >
               Download Video
             </button>
@@ -373,9 +514,27 @@ function Video() {
               <button
                 type="button"
                 onClick={handleDeleteVideo}
-                className="rounded-full border border-rose-400/55 bg-rose-500/20 px-4 py-1.5 text-xs text-rose-100 transition hover:bg-rose-500/30"
+                className="video-action-btn min-h-9 whitespace-nowrap rounded-full border border-rose-300/75 bg-gradient-to-r from-rose-600 to-red-600 px-4 py-2 text-[11px] font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 hover:brightness-110 hover:shadow-[0_10px_22px_rgba(244,63,94,0.32)] sm:text-xs"
               >
                 Delete Video
+              </button>
+            ) : null}
+            {ownerId && !isOwner ? (
+              <button
+                type="button"
+                onClick={handleSubscribeToggle}
+                disabled={subscriptionBusy}
+                className={`video-action-btn min-h-9 whitespace-nowrap rounded-full border px-4 py-2 text-[11px] font-semibold tracking-[0.01em] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_22px_rgba(0,0,0,0.3)] disabled:cursor-not-allowed disabled:opacity-60 sm:text-xs ${
+                  isSubscribed
+                    ? "border-cyan-300/80 bg-gradient-to-r from-cyan-600 to-blue-600 text-white"
+                    : "border-fuchsia-300/80 bg-gradient-to-r from-fuchsia-600 to-violet-600 text-white"
+                }`}
+              >
+                {subscriptionBusy
+                  ? "Updating..."
+                  : isSubscribed
+                    ? "Subscribed"
+                    : "Subscribe"}
               </button>
             ) : null}
           </div>
@@ -459,6 +618,97 @@ function Video() {
             </div>
           ) : null}
         </div>
+
+        {user ? (
+          <div className="glass-panel p-6">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h2 className="font-display text-xl text-white">Playlists</h2>
+                <p className="mt-1 text-sm text-brand-muted">
+                  Save this video to one of your playlists or create a new one.
+                </p>
+              </div>
+              {libraryLoading ? (
+                <span className="text-xs uppercase tracking-[0.2em] text-brand-muted">
+                  Syncing
+                </span>
+              ) : null}
+            </div>
+
+            <form
+              className="mt-4 grid gap-3 md:grid-cols-2"
+              onSubmit={handleCreatePlaylist}
+            >
+              <input
+                type="text"
+                value={playlistName}
+                onChange={(event) => setPlaylistName(event.target.value)}
+                placeholder="New playlist name"
+                className="rounded-xl border border-white/15 bg-black/30 px-4 py-2 text-sm text-white outline-none ring-brand-accent focus:ring"
+              />
+              <input
+                type="text"
+                value={playlistDescription}
+                onChange={(event) => setPlaylistDescription(event.target.value)}
+                placeholder="Short playlist description"
+                className="rounded-xl border border-white/15 bg-black/30 px-4 py-2 text-sm text-white outline-none ring-brand-accent focus:ring"
+              />
+              <button className="rounded-xl bg-brand-base px-4 py-2 text-sm text-white md:col-span-2">
+                Create Playlist
+              </button>
+            </form>
+
+            <div className="mt-5 grid gap-3">
+              {userPlaylists.length ? (
+                userPlaylists.map((playlist) => {
+                  const playlistId = playlist._id || playlist.id;
+                  const hasVideo = (playlist.videos || []).some((item) => {
+                    const itemId = item?._id || item?.id || item;
+                    return String(itemId) === String(currentVideoId);
+                  });
+
+                  return (
+                    <div
+                      key={playlistId}
+                      className="rounded-2xl border border-white/10 bg-brand-surface p-4"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <p className="font-display text-lg text-white">
+                            {playlist.name}
+                          </p>
+                          <p className="mt-1 text-sm text-brand-muted">
+                            {playlist.description}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handlePlaylistVideoToggle(playlistId)}
+                          disabled={playlistBusyId === playlistId}
+                          className={`rounded-full border px-4 py-2 text-xs transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                            hasVideo
+                              ? "border-rose-400/60 bg-rose-500/20 text-rose-100 hover:bg-rose-500/30"
+                              : "border-brand-base/60 bg-brand-base/20 text-white hover:bg-brand-base/30"
+                          }`}
+                        >
+                          {playlistBusyId === playlistId
+                            ? "Updating..."
+                            : hasVideo
+                              ? "Remove Video"
+                              : "Add Video"}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="rounded-2xl border border-dashed border-white/20 p-4 text-sm text-brand-muted">
+                  No playlists yet. Create one above.
+                </div>
+              )}
+            </div>
+          </div>
+        ) : null}
       </section>
 
       <aside className="space-y-4">

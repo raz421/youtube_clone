@@ -5,6 +5,7 @@ import {
   extractResponseData,
   setApiToken,
 } from "../lib/api.js";
+import { useAppStore } from "./appStore.js";
 
 const ACCESS_KEY = "vv_access_token";
 const REFRESH_KEY = "vv_refresh_token";
@@ -32,11 +33,17 @@ export const useAuthStore = create((set, get) => ({
   refreshToken: localStorage.getItem(REFRESH_KEY) || "",
   isAuthLoading: false,
 
+  isAdmin: () => get().user?.role === "admin",
+  isUser: () => get().user?.role !== "admin",
+
   bootstrapAuth: async () => {
+    const hydrateUserLibrary = useAppStore.getState().hydrateUserLibrary;
+    const clearUserLibrary = useAppStore.getState().clearUserLibrary;
     const accessToken = localStorage.getItem(ACCESS_KEY);
     const refreshToken = localStorage.getItem(REFRESH_KEY);
 
     if (!accessToken && !refreshToken) {
+      clearUserLibrary();
       return;
     }
 
@@ -49,6 +56,7 @@ export const useAuthStore = create((set, get) => ({
 
       const profileResponse = await api.get("/api/v1/users/current-user");
       const user = extractResponseData(profileResponse);
+      hydrateUserLibrary(user?._id);
       set({
         user,
         accessToken: accessToken || "",
@@ -68,6 +76,7 @@ export const useAuthStore = create((set, get) => ({
 
           const profileResponse = await api.get("/api/v1/users/current-user");
           const user = extractResponseData(profileResponse);
+          hydrateUserLibrary(user?._id);
           set({
             user,
             accessToken: tokens.accessToken,
@@ -76,10 +85,12 @@ export const useAuthStore = create((set, get) => ({
           return;
         } catch (refreshError) {
           clearTokens();
+          clearUserLibrary();
           set({ user: null, accessToken: "", refreshToken: "" });
         }
       } else {
         clearTokens();
+        clearUserLibrary();
         set({ user: null, accessToken: "", refreshToken: "" });
       }
     } finally {
@@ -88,6 +99,7 @@ export const useAuthStore = create((set, get) => ({
   },
 
   login: async ({ identifier, password }) => {
+    const hydrateUserLibrary = useAppStore.getState().hydrateUserLibrary;
     set({ isAuthLoading: true });
 
     try {
@@ -104,6 +116,7 @@ export const useAuthStore = create((set, get) => ({
         accessToken: data.accessToken,
         refreshToken: data.refreshToken,
       });
+      hydrateUserLibrary(data?.user?._id);
 
       return { ok: true };
     } catch (error) {
@@ -139,6 +152,7 @@ export const useAuthStore = create((set, get) => ({
   },
 
   logout: async () => {
+    const clearUserLibrary = useAppStore.getState().clearUserLibrary;
     try {
       await api.post("/api/v1/users/logout");
     } catch (error) {
@@ -146,13 +160,16 @@ export const useAuthStore = create((set, get) => ({
     }
 
     clearTokens();
+    clearUserLibrary();
     set({ user: null, accessToken: "", refreshToken: "" });
   },
 
   refreshUser: async () => {
+    const hydrateUserLibrary = useAppStore.getState().hydrateUserLibrary;
     try {
       const profileResponse = await api.get("/api/v1/users/current-user");
       const user = extractResponseData(profileResponse);
+      hydrateUserLibrary(user?._id);
       set({ user });
       return { ok: true, user };
     } catch (error) {

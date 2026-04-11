@@ -74,6 +74,12 @@ const userSchema = new Schema(
         ref: "Video",
       },
     ],
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+      index: true,
+    },
   },
   { timestamps: true }
 );
@@ -99,6 +105,7 @@ userSchema.methods.generateAccessToken = function () {
       username: this.username,
       email: this.email,
       fullname: this.fullname,
+      role: this.role || "user",
     },
     accessTokenSecret,
     {

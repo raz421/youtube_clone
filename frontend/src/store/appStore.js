@@ -1,54 +1,67 @@
 import { create } from "zustand";
 
 const randomId = () => Math.random().toString(36).slice(2, 10);
-const STORAGE_KEY = "vv_user_library";
+const STORAGE_KEY_PREFIX = "vv_user_library";
 
-const getStoredLibrary = () => {
+const emptyLibrary = {
+  watchHistory: [],
+  likedVideos: [],
+  watchLater: [],
+  downloadedVideos: [],
+  dislikedVideos: [],
+  likedComments: [],
+};
+
+const getLibraryStorageKey = (userId) => {
+  if (!userId) {
+    return "";
+  }
+
+  return `${STORAGE_KEY_PREFIX}:${String(userId)}`;
+};
+
+const sanitizeLibrary = (parsed) => ({
+  watchHistory: Array.isArray(parsed?.watchHistory) ? parsed.watchHistory : [],
+  likedVideos: Array.isArray(parsed?.likedVideos) ? parsed.likedVideos : [],
+  watchLater: Array.isArray(parsed?.watchLater) ? parsed.watchLater : [],
+  downloadedVideos: Array.isArray(parsed?.downloadedVideos)
+    ? parsed.downloadedVideos
+    : [],
+  dislikedVideos: Array.isArray(parsed?.dislikedVideos)
+    ? parsed.dislikedVideos
+    : [],
+  likedComments: Array.isArray(parsed?.likedComments)
+    ? parsed.likedComments
+    : [],
+});
+
+const getStoredLibrary = (userId) => {
+  const storageKey = getLibraryStorageKey(userId);
+  if (!storageKey) {
+    return { ...emptyLibrary };
+  }
+
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(storageKey);
     if (!raw) {
-      return {
-        watchHistory: [],
-        likedVideos: [],
-        watchLater: [],
-        downloadedVideos: [],
-        dislikedVideos: [],
-        likedComments: [],
-      };
+      return { ...emptyLibrary };
     }
 
     const parsed = JSON.parse(raw);
-    return {
-      watchHistory: Array.isArray(parsed.watchHistory)
-        ? parsed.watchHistory
-        : [],
-      likedVideos: Array.isArray(parsed.likedVideos) ? parsed.likedVideos : [],
-      watchLater: Array.isArray(parsed.watchLater) ? parsed.watchLater : [],
-      downloadedVideos: Array.isArray(parsed.downloadedVideos)
-        ? parsed.downloadedVideos
-        : [],
-      dislikedVideos: Array.isArray(parsed.dislikedVideos)
-        ? parsed.dislikedVideos
-        : [],
-      likedComments: Array.isArray(parsed.likedComments)
-        ? parsed.likedComments
-        : [],
-    };
+    return sanitizeLibrary(parsed);
   } catch (_error) {
-    return {
-      watchHistory: [],
-      likedVideos: [],
-      watchLater: [],
-      downloadedVideos: [],
-      dislikedVideos: [],
-      likedComments: [],
-    };
+    return { ...emptyLibrary };
   }
 };
 
 const persistLibrary = (state) => {
+  const storageKey = getLibraryStorageKey(state.libraryOwnerId);
+  if (!storageKey) {
+    return;
+  }
+
   localStorage.setItem(
-    STORAGE_KEY,
+    storageKey,
     JSON.stringify({
       watchHistory: state.watchHistory,
       likedVideos: state.likedVideos,
@@ -59,8 +72,6 @@ const persistLibrary = (state) => {
     })
   );
 };
-
-const initialLibrary = getStoredLibrary();
 
 export const useAppStore = create((set) => ({
   videos: [],
@@ -73,13 +84,28 @@ export const useAppStore = create((set) => ({
     streakDays: 1,
     completionRate: 0,
   },
-  watchHistory: initialLibrary.watchHistory,
-  likedVideos: initialLibrary.likedVideos,
-  watchLater: initialLibrary.watchLater,
-  downloadedVideos: initialLibrary.downloadedVideos,
-  dislikedVideos: initialLibrary.dislikedVideos,
-  likedComments: initialLibrary.likedComments,
+  libraryOwnerId: null,
+  watchHistory: [],
+  likedVideos: [],
+  watchLater: [],
+  downloadedVideos: [],
+  dislikedVideos: [],
+  likedComments: [],
   toasts: [],
+
+  hydrateUserLibrary: (userId) =>
+    set(() => {
+      const library = getStoredLibrary(userId);
+      return {
+        libraryOwnerId: userId ? String(userId) : null,
+        ...library,
+      };
+    }),
+  clearUserLibrary: () =>
+    set(() => ({
+      libraryOwnerId: null,
+      ...emptyLibrary,
+    })),
 
   setVideos: (videosOrUpdater) =>
     set((state) => ({

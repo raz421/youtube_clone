@@ -1,10 +1,12 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
+import AdvancedLoader from "./components/AdvancedLoader.jsx";
 import Navbar from "./components/Navbar.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import Sidebar from "./components/Sidebar.jsx";
 import ToastStack from "./components/ToastStack.jsx";
 import { usePageTransition } from "./hooks/usePageTransition.js";
+import Admin from "./pages/Admin.jsx";
 import Home from "./pages/Home.jsx";
 import Login from "./pages/Login.jsx";
 import Profile from "./pages/Profile.jsx";
@@ -18,10 +20,36 @@ function App() {
   const location = useLocation();
   const pageRef = usePageTransition(location.pathname);
   const bootstrapAuth = useAuthStore((state) => state.bootstrapAuth);
+  const isAuthLoading = useAuthStore((state) => state.isAuthLoading);
+  const [booting, setBooting] = useState(true);
 
   useEffect(() => {
-    bootstrapAuth();
+    let mounted = true;
+    const minDelay = new Promise((resolve) => setTimeout(resolve, 750));
+
+    const hydrateAuth = async () => {
+      await Promise.all([bootstrapAuth(), minDelay]);
+      if (mounted) {
+        setBooting(false);
+      }
+    };
+
+    hydrateAuth();
+
+    return () => {
+      mounted = false;
+    };
   }, [bootstrapAuth]);
+
+  if (booting || isAuthLoading) {
+    return (
+      <AdvancedLoader
+        fullscreen
+        title="Warming Up VidVortex"
+        subtitle="Authenticating and preparing your dashboard"
+      />
+    );
+  }
 
   return (
     <div className="relative min-h-screen bg-vidvortex-radial text-brand-ink">
@@ -38,6 +66,14 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/video/:id" element={<Video />} />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <Admin />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/upload"
               element={

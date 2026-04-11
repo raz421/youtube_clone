@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, extractResponseData } from "../lib/api.js";
 import { useAppStore } from "../store/appStore.js";
+import { useAuthStore } from "../store/authStore.js";
 
 function Profile() {
   const [uploadedVideos, setUploadedVideos] = useState([]);
@@ -17,6 +18,7 @@ function Profile() {
   const watchHistory = useAppStore((state) => state.watchHistory);
   const likedVideos = useAppStore((state) => state.likedVideos);
   const watchLater = useAppStore((state) => state.watchLater);
+  const user = useAuthStore((state) => state.user);
 
   useEffect(() => {
     let mounted = true;
@@ -59,9 +61,18 @@ function Profile() {
   return (
     <section className="space-y-6">
       <div className="glass-panel p-6">
-        <h1 className="font-display text-3xl text-white">Creator Profile</h1>
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="font-display text-3xl text-white">
+            {user?.role === "admin" ? "Admin Profile" : "Creator Profile"}
+          </h1>
+          <span className="rounded-full border border-white/15 bg-brand-surface px-3 py-1 text-xs uppercase tracking-[0.18em] text-brand-muted">
+            {user?.role || "user"}
+          </span>
+        </div>
         <p className="mt-2 text-brand-muted">
-          Track your watch habits and creator momentum.
+          {user?.role === "admin"
+            ? "Manage your admin-facing account overview and platform activity."
+            : "Track your watch habits and creator momentum."}
         </p>
 
         <div className="mt-6 grid gap-4 md:grid-cols-3">

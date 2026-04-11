@@ -17,6 +17,7 @@ function Sidebar() {
   const watchLaterCount = useAppStore((state) => state.watchLater.length);
   const downloadedCount = useAppStore((state) => state.downloadedVideos.length);
   const user = useAuthStore((state) => state.user);
+  const isAdmin = user?.role === "admin";
 
   const libraryItems = [
     { key: "all", label: "All Videos" },
@@ -44,7 +45,7 @@ function Sidebar() {
             key={mood}
             type="button"
             onClick={() => setActiveMood(mood)}
-            className={`w-full rounded-2xl border px-4 py-2 text-left text-sm transition ${
+            className={`sidebar-btn w-full rounded-2xl border px-4 py-2 text-left text-sm transition ${
               activeMood === mood
                 ? "border-brand-base bg-brand-base/20 text-white shadow-glow"
                 : "border-white/10 bg-brand-surface text-brand-muted hover:text-white"
@@ -70,7 +71,7 @@ function Sidebar() {
                   key={item.key}
                   type="button"
                   onClick={() => handleLibrarySectionOpen(item.key)}
-                  className={`flex w-full items-center justify-between rounded-2xl border px-4 py-2 text-sm transition ${
+                  className={`sidebar-btn flex w-full items-center justify-between rounded-2xl border px-4 py-2 text-sm transition ${
                     isLibraryActive
                       ? "border-brand-base bg-brand-base/20 text-white shadow-glow"
                       : "border-white/10 bg-brand-surface text-brand-muted hover:text-white"
@@ -98,6 +99,20 @@ function Sidebar() {
           >
             Settings
           </NavLink>
+          {isAdmin ? (
+            <NavLink
+              to="/admin"
+              className={({ isActive, isPending }) =>
+                `mt-2 block w-full rounded-2xl border px-4 py-2 text-sm transition-all duration-200 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-base/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b0a12] ${
+                  isActive || isPending
+                    ? "border-brand-base bg-brand-base/20 text-white shadow-glow"
+                    : "border-white/10 bg-brand-surface text-brand-muted hover:border-brand-base/70 hover:bg-brand-base/12 hover:text-white focus-visible:border-brand-base/70"
+                }`
+              }
+            >
+              Admin Dashboard
+            </NavLink>
+          ) : null}
         </div>
       ) : null}
     </aside>

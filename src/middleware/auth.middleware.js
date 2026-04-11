@@ -32,4 +32,17 @@ const verifyJwt = asyncHandaller(async (req, res, next) => {
     throw new ApiError(401, error.message || "Invalid Accesstoken");
   }
 });
-export { verifyJwt };
+
+const requireRole = (...allowedRoles) =>
+  asyncHandaller(async (req, _res, next) => {
+    const currentRole = req.user?.role || "user";
+
+    if (!allowedRoles.length || allowedRoles.includes(currentRole)) {
+      next();
+      return;
+    }
+
+    throw new ApiError(403, "You are not authorized to access this resource");
+  });
+
+export { requireRole, verifyJwt };

@@ -2,6 +2,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
 import userRouter from "../src/routes/user.routes.js";
+import adminRouter from "./routes/admin.route.js";
 import commentRouter from "./routes/comment.route.js";
 import likeRouter from "./routes/like.router.js";
 import playlistRouter from "./routes/playlist.route.js";
@@ -72,6 +73,7 @@ app.use("/api/v1/video", videoRouter);
 app.use("/api/v1/comment", commentRouter);
 app.use("/api/v1/like", likeRouter);
 app.use("/api/v1/playlist", playlistRouter);
+app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/subcription", subcriptionRouter);
 app.use("/api/v1/tweet", tweetRouter);
 

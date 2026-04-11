@@ -4,11 +4,11 @@ import { Video } from "../models/video.model.js";
 import { ApiError } from "../utills/ApiError.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
 import { asyncHandaller } from "../utills/asyncHandaller.js";
-const getAllComments = asyncHandaller(async (req, res) => { 
+const getAllComments = asyncHandaller(async (req, res) => {
   const { videoId } = req.params;
   const { page = 1, limit = 10 } = req.query;
-  if (!videoId) {
-    throw new ApiError(401, "ViodeoId is required");
+  if (!videoId || !mongoose.Types.ObjectId.isValid(videoId)) {
+    throw new ApiError(400, "Valid videoId is required");
   }
   const options = {
     page: parseInt(page),
@@ -56,36 +56,50 @@ const addComment = asyncHandaller(async (req, res) => {
   const { videoId } = req.params;
   const { content } = req.body;
 
-  if (!content || !videoId) {
-    throw new ApiError(401, "Content and ViodeoId is required");
+  if (
+    !content?.trim() ||
+    !videoId ||
+    !mongoose.Types.ObjectId.isValid(videoId)
+  ) {
+    throw new ApiError(400, "Content and valid videoId are required");
   }
   const video = await Video.findById(videoId);
   if (!video) {
-    throw new ApiError(404, "Video is not found when add a commnt");
+    throw new ApiError(404, "Video not found");
   }
   const comment = await Comment.create({
-    content,
+    content: content.trim(),
     owner: req.user._id,
     video: video._id,
   });
   return res
-    .status(200)
-    .json(new ApiResponse(200, comment, "comment added successfully"));
+    .status(201)
+    .json(new ApiResponse(201, comment, "Comment added successfully"));
 });
 const updateComment = asyncHandaller(async (req, res) => {
   const { id } = req.params;
-  if (!id) {
-    throw new ApiError(400, "commntid is not found when update comment");
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(400, "Valid comment id is required");
   }
   const { content } = req.body;
-  if (!content) {
-    throw new ApiError(400, "content is required");
+  if (!content?.trim()) {
+    throw new ApiError(400, "Content is required");
   }
+  const existingComment = await Comment.findById(id);
+
+  if (!existingComment) {
+    throw new ApiError(404, "Comment not found");
+  }
+
+  if (String(existingComment.owner) !== String(req.user?._id)) {
+    throw new ApiError(403, "Only the comment owner can update this comment");
+  }
+
   const newComment = await Comment.findByIdAndUpdate(
     id,
     {
       $set: {
-        content,
+        content: content.trim(),
       },
     },
     {
@@ -94,13 +108,23 @@ const updateComment = asyncHandaller(async (req, res) => {
   );
   return res
     .status(200)
-    .json(new ApiResponse(200, newComment, "new comment added successfully"));
+    .json(new ApiResponse(200, newComment, "Comment updated successfully"));
 });
 const deleteComment = asyncHandaller(async (req, res) => {
   const { id } = req.params;
-  if (!id) {
-    throw new ApiError(400, "commntid is not found when delete a comment");
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(400, "Valid comment id is required");
   }
+  const existingComment = await Comment.findById(id);
+
+  if (!existingComment) {
+    throw new ApiError(404, "Comment not found");
+  }
+
+  if (String(existingComment.owner) !== String(req.user?._id)) {
+    throw new ApiError(403, "Only the comment owner can delete this comment");
+  }
+
   const deletedComment = await Comment.findByIdAndDelete(id);
   return res
     .status(200)
@@ -108,7 +132,7 @@ const deleteComment = asyncHandaller(async (req, res) => {
       new ApiResponse(
         200,
         { deletedCommentData: deletedComment },
-        "deleted comment successfully"
+        "Comment deleted successfully"
       )
     );
 });

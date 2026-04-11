@@ -7,7 +7,7 @@ import {
   getUserPlaylist,
   removeVideoFromPlaylist,
   updatePlaylist,
-} from "../controllers/playlist.cntroller.js";
+} from "../controllers/playlist.controller.js";
 import { verifyJwt } from "../middleware/auth.middleware.js";
 
 const router = Router();
@@ -23,7 +23,7 @@ router
   .post(addVideoToPlaylist);
 router
   .route("/remove-video-from-playlist/:playListId/:videoId")
-  .get(removeVideoFromPlaylist);
+  .delete(removeVideoFromPlaylist);
 router.route("/delete-playlist/:playListId").delete(deletePlaylist);
 router.route("/update-playlist/:playListId").patch(updatePlaylist);
 

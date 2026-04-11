@@ -24,7 +24,9 @@ function Login() {
     }
 
     addToast("success", "Welcome back");
-    const redirectPath = location.state?.from || "/";
+    const currentUser = useAuthStore.getState().user;
+    const redirectPath =
+      location.state?.from || (currentUser?.role === "admin" ? "/admin" : "/");
     navigate(redirectPath, { replace: true });
   };
 
@@ -89,4 +91,3 @@ function Login() {
 }
 
 export default Login;
-
