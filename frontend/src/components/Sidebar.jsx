@@ -1,10 +1,12 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAppStore } from "../store/appStore.js";
 import { useAuthStore } from "../store/authStore.js";
 
 const moods = ["All", "Focus", "Learn", "Relax"];
 
 function Sidebar() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const activeMood = useAppStore((state) => state.activeMood);
   const setActiveMood = useAppStore((state) => state.setActiveMood);
   const activeLibraryView = useAppStore((state) => state.activeLibraryView);
@@ -22,6 +24,12 @@ function Sidebar() {
     { key: "watchLater", label: "Watch Later", count: watchLaterCount },
     { key: "downloads", label: "Downloads", count: downloadedCount },
   ];
+
+  const handleLibrarySectionOpen = (section) => {
+    setActiveMood("All");
+    setActiveLibraryView(section);
+    navigate("/");
+  };
 
   return (
     <aside className="glass-panel-strong hidden h-fit p-5 lg:block">
@@ -53,13 +61,17 @@ function Sidebar() {
             Account
           </p>
           <div className="mb-3 space-y-2">
-            {libraryItems.map((item) => (
+            {libraryItems.map((item) => {
+              const isLibraryActive =
+                location.pathname === "/" && activeLibraryView === item.key;
+
+              return (
               <button
                 key={item.key}
                 type="button"
-                onClick={() => setActiveLibraryView(item.key)}
+                onClick={() => handleLibrarySectionOpen(item.key)}
                 className={`flex w-full items-center justify-between rounded-2xl border px-4 py-2 text-sm transition ${
-                  activeLibraryView === item.key
+                  isLibraryActive
                     ? "border-brand-base bg-brand-base/20 text-white shadow-glow"
                     : "border-white/10 bg-brand-surface text-brand-muted hover:text-white"
                 }`}
@@ -71,7 +83,8 @@ function Sidebar() {
                   </span>
                 ) : null}
               </button>
-            ))}
+              );
+            })}
           </div>
           <NavLink
             to="/settings"
