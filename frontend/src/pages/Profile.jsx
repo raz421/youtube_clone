@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { api, extractResponseData } from "../lib/api.js";
 import { useAppStore } from "../store/appStore.js";
 
@@ -13,6 +14,9 @@ function Profile() {
   const [loading, setLoading] = useState(true);
 
   const watchAnalytics = useAppStore((state) => state.watchAnalytics);
+  const watchHistory = useAppStore((state) => state.watchHistory);
+  const likedVideos = useAppStore((state) => state.likedVideos);
+  const watchLater = useAppStore((state) => state.watchLater);
 
   useEffect(() => {
     let mounted = true;
@@ -121,9 +125,97 @@ function Profile() {
           ))}
         </div>
       </div>
+
+      <div className="grid gap-6 xl:grid-cols-3">
+        <div className="glass-panel p-6">
+          <h2 className="font-display text-xl text-white">Watch History</h2>
+          <p className="mt-2 text-sm text-brand-muted">
+            Recently watched videos.
+          </p>
+          <div className="mt-4 space-y-3">
+            {watchHistory.length ? (
+              watchHistory.slice(0, 6).map((video) => (
+                <Link
+                  key={`history-${video.id || video._id}`}
+                  to={`/video/${video.id || video._id}`}
+                  className="block rounded-xl border border-white/10 bg-brand-surface p-3 transition hover:border-brand-base/50"
+                >
+                  <p className="line-clamp-1 text-sm text-white">
+                    {video.title}
+                  </p>
+                  <p className="mt-1 text-xs text-brand-muted">
+                    {video.mood || "Focus"}
+                  </p>
+                </Link>
+              ))
+            ) : (
+              <p className="rounded-xl border border-dashed border-white/20 p-3 text-sm text-brand-muted">
+                No watch history yet.
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="glass-panel p-6">
+          <h2 className="font-display text-xl text-white">Liked Videos</h2>
+          <p className="mt-2 text-sm text-brand-muted">
+            Videos you liked while signed in.
+          </p>
+          <div className="mt-4 space-y-3">
+            {likedVideos.length ? (
+              likedVideos.slice(0, 6).map((video) => (
+                <Link
+                  key={`liked-${video.id || video._id}`}
+                  to={`/video/${video.id || video._id}`}
+                  className="block rounded-xl border border-white/10 bg-brand-surface p-3 transition hover:border-brand-base/50"
+                >
+                  <p className="line-clamp-1 text-sm text-white">
+                    {video.title}
+                  </p>
+                  <p className="mt-1 text-xs text-brand-muted">
+                    {video.views || 0} views
+                  </p>
+                </Link>
+              ))
+            ) : (
+              <p className="rounded-xl border border-dashed border-white/20 p-3 text-sm text-brand-muted">
+                No liked videos yet.
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="glass-panel p-6">
+          <h2 className="font-display text-xl text-white">Watch Later</h2>
+          <p className="mt-2 text-sm text-brand-muted">
+            Queue videos for your next session.
+          </p>
+          <div className="mt-4 space-y-3">
+            {watchLater.length ? (
+              watchLater.slice(0, 6).map((video) => (
+                <Link
+                  key={`later-${video.id || video._id}`}
+                  to={`/video/${video.id || video._id}`}
+                  className="block rounded-xl border border-white/10 bg-brand-surface p-3 transition hover:border-brand-base/50"
+                >
+                  <p className="line-clamp-1 text-sm text-white">
+                    {video.title}
+                  </p>
+                  <p className="mt-1 text-xs text-brand-muted">
+                    {video.mood || "Focus"}
+                  </p>
+                </Link>
+              ))
+            ) : (
+              <p className="rounded-xl border border-dashed border-white/20 p-3 text-sm text-brand-muted">
+                No watch later videos.
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
     </section>
   );
 }
 
 export default Profile;
-

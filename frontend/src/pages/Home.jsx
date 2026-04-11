@@ -1,6 +1,7 @@
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import SkeletonCard from "../components/SkeletonCard.jsx";
 import VideoCard from "../components/VideoCard.jsx";
 import { api, extractResponseData } from "../lib/api.js";
@@ -9,10 +10,13 @@ import { useAppStore } from "../store/appStore.js";
 gsap.registerPlugin(ScrollTrigger);
 
 function Home() {
+  const navigate = useNavigate();
   const heroRef = useRef(null);
   const gridRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isRouletteRunning, setIsRouletteRunning] = useState(false);
+  const [roulettePick, setRoulettePick] = useState(null);
 
   const videos = useAppStore((state) => state.videos);
   const setVideos = useAppStore((state) => state.setVideos);
@@ -41,7 +45,7 @@ function Home() {
 
         setVideos(extractResponseData(videosRes) || []);
         setRecommendations(extractResponseData(recommendationRes) || []);
-      } catch (requestError) {
+      } catch {
         if (!mounted) {
           return;
         }
@@ -106,6 +110,32 @@ function Home() {
 
   const featured = filteredVideos[0];
 
+  const runVibeRoulette = () => {
+    const pool = filteredVideos.length ? filteredVideos : videos;
+
+    if (!pool.length) {
+      addToast("error", "No videos available for roulette right now");
+      return;
+    }
+
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    const pickId = pick.id || pick._id;
+
+    if (!pickId) {
+      addToast("error", "Unable to open roulette pick");
+      return;
+    }
+
+    setIsRouletteRunning(true);
+    setRoulettePick(pick);
+
+    setTimeout(() => {
+      setIsRouletteRunning(false);
+      addToast("success", `Roulette Pick: ${pick.title}`);
+      navigate(`/video/${pickId}`);
+    }, 550);
+  };
+
   return (
     <div className="space-y-10" style={{ "--adaptive-glow": adaptiveGlow }}>
       <section
@@ -124,6 +154,35 @@ function Home() {
           VidVortex blends cinematic playback, adaptive glow UI, and mood-first
           discovery to make every session feel intentional.
         </p>
+
+        <div className="hero-reveal mt-6 rounded-2xl border border-brand-base/35 bg-gradient-to-r from-brand-base/14 via-brand-base/7 to-transparent p-4 md:flex md:items-center md:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.22em] text-brand-accent">
+              Standout Mode
+            </p>
+            <h3 className="mt-1 font-display text-xl text-white">
+              Vibe Roulette
+            </h3>
+            <p className="mt-1 text-sm text-brand-muted">
+              Skip endless scrolling. Get one instant, mood-matched surprise
+              pick.
+            </p>
+            {roulettePick ? (
+              <p className="mt-2 text-xs text-brand-ink">
+                Last pick: {roulettePick.title}
+              </p>
+            ) : null}
+          </div>
+
+          <button
+            type="button"
+            onClick={runVibeRoulette}
+            disabled={isRouletteRunning || loading}
+            className="mt-4 inline-flex rounded-full border border-brand-base/70 bg-brand-base/22 px-5 py-2.5 text-sm font-semibold text-white shadow-glow transition hover:bg-brand-base/35 disabled:cursor-not-allowed disabled:opacity-60 md:mt-0"
+          >
+            {isRouletteRunning ? "Spinning..." : "Launch Roulette"}
+          </button>
+        </div>
 
         {featured ? (
           <div className="hero-reveal mt-8 grid gap-6 md:grid-cols-[1.2fr_1fr]">
@@ -237,4 +296,3 @@ function Home() {
 }
 
 export default Home;
-

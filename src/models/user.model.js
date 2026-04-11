@@ -1,6 +1,36 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import mongoose, { Schema } from "mongoose";
+
+const getJwtConfig = () => {
+  const accessTokenSecret =
+    process.env.ACCESSTOKEN_TOKEN_SECRET ||
+    process.env.ACCESS_TOKEN_SECRET ||
+    (process.env.NODE_ENV !== "production"
+      ? "dev-access-token-secret"
+      : undefined);
+
+  const refreshTokenSecret =
+    process.env.REFRESH_TOKEN_SECRET ||
+    process.env.REFRESHTOKEN_TOKEN_SECRET ||
+    (process.env.NODE_ENV !== "production"
+      ? "dev-refresh-token-secret"
+      : undefined);
+
+  return {
+    accessTokenSecret,
+    refreshTokenSecret,
+    accessTokenExpiry:
+      process.env.ACCESSTOKEN_TOKEN_EXPIRY ||
+      process.env.ACCESS_TOKEN_EXPIRY ||
+      "1d",
+    refreshTokenExpiry:
+      process.env.REFRESH_TOKEN_EXPIRY ||
+      process.env.REFRESHTOKEN_TOKEN_EXPIRY ||
+      "10d",
+  };
+};
+
 const userSchema = new Schema(
   {
     username: {
@@ -57,6 +87,12 @@ userSchema.methods.isPassword = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
 userSchema.methods.generateAccessToken = function () {
+  const { accessTokenSecret, accessTokenExpiry } = getJwtConfig();
+
+  if (!accessTokenSecret) {
+    throw new Error("ACCESS token secret is not configured");
+  }
+
   return jwt.sign(
     {
       _id: this._id,
@@ -64,20 +100,26 @@ userSchema.methods.generateAccessToken = function () {
       email: this.email,
       fullname: this.fullname,
     },
-    process.env.ACCESSTOKEN_TOKEN_SECRET,
+    accessTokenSecret,
     {
-      expiresIn: process.env.ACCESSTOKEN_TOKEN_EXPIRY,
+      expiresIn: accessTokenExpiry,
     }
   );
 };
 userSchema.methods.generateRefreshToken = function () {
+  const { refreshTokenSecret, refreshTokenExpiry } = getJwtConfig();
+
+  if (!refreshTokenSecret) {
+    throw new Error("REFRESH token secret is not configured");
+  }
+
   return jwt.sign(
     {
       _id: this._id,
     },
-    process.env.REFRESH_TOKEN_SECRET,
+    refreshTokenSecret,
     {
-      expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
+      expiresIn: refreshTokenExpiry,
     }
   );
 };

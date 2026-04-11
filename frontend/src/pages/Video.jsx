@@ -19,6 +19,15 @@ function Video() {
   const updateWatchAnalytics = useAppStore(
     (state) => state.updateWatchAnalytics
   );
+  const trackWatchHistory = useAppStore((state) => state.trackWatchHistory);
+  const toggleWatchLater = useAppStore((state) => state.toggleWatchLater);
+  const toggleLikedVideo = useAppStore((state) => state.toggleLikedVideo);
+  const toggleDislikedVideo = useAppStore((state) => state.toggleDislikedVideo);
+  const toggleLikedComment = useAppStore((state) => state.toggleLikedComment);
+  const likedVideos = useAppStore((state) => state.likedVideos);
+  const watchLater = useAppStore((state) => state.watchLater);
+  const dislikedVideos = useAppStore((state) => state.dislikedVideos);
+  const likedComments = useAppStore((state) => state.likedComments);
   const setAdaptiveGlow = useAppStore((state) => state.setAdaptiveGlow);
   const addToast = useAppStore((state) => state.addToast);
   const user = useAuthStore((state) => state.user);
@@ -42,6 +51,7 @@ function Video() {
 
         const videoData = extractResponseData(videoRes);
         setVideo(videoData);
+        trackWatchHistory(videoData);
         setRecommendations(extractResponseData(recRes) || []);
         updateWatchAnalytics(
           Math.max(5, Math.round((videoData?.duration || 300) / 60))
@@ -62,9 +72,26 @@ function Video() {
     return () => {
       mounted = false;
     };
-  }, [id, setRecommendations, updateWatchAnalytics]);
+  }, [id, setRecommendations, trackWatchHistory, updateWatchAnalytics]);
 
   const timelineMoments = useMemo(() => video?.watchMoments || [], [video]);
+  const currentVideoId = video?.id || video?._id;
+
+  const isLiked = useMemo(
+    () => likedVideos.some((item) => (item.id || item._id) === currentVideoId),
+    [likedVideos, currentVideoId]
+  );
+
+  const isInWatchLater = useMemo(
+    () => watchLater.some((item) => (item.id || item._id) === currentVideoId),
+    [watchLater, currentVideoId]
+  );
+
+  const isDisliked = useMemo(
+    () =>
+      dislikedVideos.some((item) => (item.id || item._id) === currentVideoId),
+    [dislikedVideos, currentVideoId]
+  );
 
   useEffect(() => {
     if (!video?.id && !video?._id) {
@@ -109,14 +136,16 @@ function Video() {
     }
 
     try {
-      await api.post("/comment", {
+      const response = await api.post("/comment", {
         videoId: id,
         content: commentDraft,
       });
+
+      const createdComment = extractResponseData(response);
       setVideo((current) => ({
         ...current,
         comments: [
-          {
+          createdComment || {
             _id: Math.random().toString(36).slice(2),
             content: commentDraft,
             createdAt: new Date().toISOString(),
@@ -129,6 +158,66 @@ function Video() {
     } catch (requestError) {
       addToast("error", "Sign in required to comment");
     }
+  };
+
+  const requireAuthAction = () => {
+    if (user) {
+      return true;
+    }
+
+    addToast("error", "Please sign in first");
+    navigate("/login", { state: { from: `/video/${id}` } });
+    return false;
+  };
+
+  const handleVideoLikeToggle = async () => {
+    if (!requireAuthAction() || !currentVideoId) {
+      return;
+    }
+
+    try {
+      await api.get(`/api/v1/like/l/toggleVideoLike/${currentVideoId}`);
+    } catch (_error) {
+      // Keep local toggle even if network call fails due to inconsistent API availability.
+    }
+
+    toggleLikedVideo(video);
+    addToast("success", isLiked ? "Removed from liked videos" : "Video liked");
+  };
+
+  const handleVideoDislikeToggle = () => {
+    if (!requireAuthAction() || !currentVideoId) {
+      return;
+    }
+
+    toggleDislikedVideo(video);
+    addToast("success", isDisliked ? "Removed dislike" : "Video disliked");
+  };
+
+  const handleWatchLaterToggle = () => {
+    if (!requireAuthAction() || !currentVideoId) {
+      return;
+    }
+
+    toggleWatchLater(video);
+    addToast(
+      "success",
+      isInWatchLater ? "Removed from watch later" : "Saved to watch later"
+    );
+  };
+
+  const handleCommentLikeToggle = async (commentId) => {
+    if (!requireAuthAction() || !commentId) {
+      return;
+    }
+
+    try {
+      await api.get(`/api/v1/like/l/toggleCommentLike/${commentId}`);
+    } catch (_error) {
+      // Fallback to local state if API fails.
+    }
+
+    toggleLikedComment(commentId);
   };
 
   if (loading) {
@@ -152,6 +241,42 @@ function Video() {
           <h1 className="font-display text-2xl text-white">{video.title}</h1>
           <p className="mt-2 text-sm text-brand-muted">{video.views} views</p>
           <p className="mt-4 text-brand-muted">{video.description}</p>
+
+          <div className="mt-5 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={handleVideoLikeToggle}
+              className={`rounded-full border px-4 py-1.5 text-xs transition ${
+                isLiked
+                  ? "border-brand-base bg-brand-base/25 text-white"
+                  : "border-white/15 bg-brand-surface text-brand-muted hover:text-white"
+              }`}
+            >
+              {isLiked ? "Liked" : "Like Video"}
+            </button>
+            <button
+              type="button"
+              onClick={handleVideoDislikeToggle}
+              className={`rounded-full border px-4 py-1.5 text-xs transition ${
+                isDisliked
+                  ? "border-rose-400/60 bg-rose-500/20 text-rose-200"
+                  : "border-white/15 bg-brand-surface text-brand-muted hover:text-white"
+              }`}
+            >
+              {isDisliked ? "Disliked" : "Dislike Video"}
+            </button>
+            <button
+              type="button"
+              onClick={handleWatchLaterToggle}
+              className={`rounded-full border px-4 py-1.5 text-xs transition ${
+                isInWatchLater
+                  ? "border-brand-accent/60 bg-brand-accent/15 text-brand-accent"
+                  : "border-white/15 bg-brand-surface text-brand-muted hover:text-white"
+              }`}
+            >
+              {isInWatchLater ? "Saved" : "Watch Later"}
+            </button>
+          </div>
 
           <div className="mt-6 rounded-2xl border border-brand-accent/30 bg-brand-accent/10 p-4">
             <p className="text-xs uppercase tracking-[0.22em] text-brand-accent">
@@ -201,9 +326,24 @@ function Video() {
                 className="rounded-xl border border-white/10 bg-brand-surface p-3"
               >
                 <p className="text-sm text-brand-ink">{comment.content}</p>
-                <p className="mt-1 text-xs text-brand-muted">
-                  {new Date(comment.createdAt).toLocaleString()}
-                </p>
+                <div className="mt-1 flex items-center justify-between">
+                  <p className="text-xs text-brand-muted">
+                    {new Date(comment.createdAt).toLocaleString()}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => handleCommentLikeToggle(comment._id)}
+                    className={`rounded-full border px-3 py-1 text-[11px] transition ${
+                      likedComments.includes(comment._id)
+                        ? "border-brand-base/70 bg-brand-base/25 text-white"
+                        : "border-white/15 text-brand-muted hover:text-white"
+                    }`}
+                  >
+                    {likedComments.includes(comment._id)
+                      ? "Liked"
+                      : "Like Comment"}
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -231,4 +371,3 @@ function Video() {
 }
 
 export default Video;
-

@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { useAppStore } from "../store/appStore.js";
 import { useAuthStore } from "../store/authStore.js";
 
@@ -38,12 +38,18 @@ function Sidebar() {
           <p className="mb-2 text-xs uppercase tracking-[0.2em] text-brand-muted">
             Account
           </p>
-          <Link
+          <NavLink
             to="/settings"
-            className="block w-full rounded-2xl border border-white/10 bg-brand-surface px-4 py-2 text-sm text-brand-muted transition hover:border-brand-accent/60 hover:text-white"
+            className={({ isActive, isPending }) =>
+              `block w-full rounded-2xl border px-4 py-2 text-sm transition-all duration-200 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-base/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b0a12] ${
+                isActive || isPending
+                  ? "border-brand-base bg-brand-base/20 text-white shadow-glow"
+                  : "border-white/10 bg-brand-surface text-brand-muted hover:border-brand-base/70 hover:bg-brand-base/12 hover:text-white focus-visible:border-brand-base/70"
+              }`
+            }
           >
             Settings
-          </Link>
+          </NavLink>
         </div>
       ) : null}
     </aside>

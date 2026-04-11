@@ -82,16 +82,16 @@ function Navbar() {
               <button
                 type="button"
                 onClick={() => setOpenMenu((prev) => !prev)}
-                className="group flex items-center gap-2.5 rounded-lg border border-white/10 bg-white/5 px-3 py-2 transition-all duration-300 hover:border-brand-base/40 hover:bg-white/10 active:scale-95"
+                className="group flex items-center gap-2.5 rounded-xl border border-brand-base/35 bg-gradient-to-br from-[rgba(34,18,52,0.96)] via-[rgba(28,16,43,0.95)] to-[rgba(18,14,30,0.95)] px-3.5 py-2.5 shadow-[0_12px_30px_rgba(0,0,0,0.35)] transition-all duration-300 hover:border-brand-base/65 hover:from-[rgba(44,22,68,0.96)] hover:via-[rgba(36,18,56,0.96)] hover:to-[rgba(24,15,38,0.96)] hover:shadow-[0_16px_36px_rgba(157,78,221,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-base/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#06070f] active:scale-[0.98]"
               >
-                <div className="relative h-8 w-8 rounded-full border border-brand-base/30 overflow-hidden group-hover:border-brand-base/60 transition-colors duration-300">
+                <div className="relative h-8 w-8 overflow-hidden rounded-full border border-brand-base/55 shadow-[0_0_0_2px_rgba(18,12,30,0.95)] transition-colors duration-300 group-hover:border-brand-base/80">
                   <img
                     src={user.avatar || "/logo.jpg"}
                     alt="Account avatar"
                     className="h-full w-full object-cover"
                   />
                 </div>
-                <span className="max-w-[140px] truncate text-sm font-medium text-brand-muted group-hover:text-brand-ink transition-colors duration-300">
+                <span className="max-w-[140px] truncate text-sm font-semibold tracking-[0.01em] text-violet-100 transition-colors duration-300 group-hover:text-white">
                   {user.username}
                 </span>
               </button>

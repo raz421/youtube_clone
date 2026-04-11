@@ -23,10 +23,16 @@ const generateAccessAndTokenRefreshToken = async (userId) => {
   } catch (e) {
     throw new ApiError(
       500,
-      "something went wrong when generating access and refresh token"
+      e?.message ||
+        "something went wrong when generating access and refresh token"
     );
   }
 };
+
+const refreshTokenSecret =
+  process.env.REFRESH_TOKEN_SECRET ||
+  process.env.REFRESHTOKEN_TOKEN_SECRET ||
+  (process.env.NODE_ENV !== "production" ? "dev-refresh-token-secret" : "");
 
 const cookieOptions = {
   httpOnly: true,
@@ -147,10 +153,7 @@ const refreshAccessToken = asyncHandaller(async (req, res) => {
     throw new ApiError(401, "unauthorize request");
   }
   try {
-    const decodedToken = jwt.verify(
-      incomingRefreshToken,
-      process.env.REFRESH_TOKEN_SECRET
-    );
+    const decodedToken = jwt.verify(incomingRefreshToken, refreshTokenSecret);
     const user = await User.findById(decodedToken._id);
     if (!user) {
       throw new ApiError(401, "invalid refresh token");
