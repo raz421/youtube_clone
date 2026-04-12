@@ -17,6 +17,11 @@ function Login() {
   const onSubmit = async (event) => {
     event.preventDefault();
 
+    if (!identifier.trim() || !password) {
+      addToast("error", "Please fill in all fields");
+      return;
+    }
+
     const result = await login({ identifier, password });
     if (!result.ok) {
       addToast("error", result.message);
@@ -60,6 +65,8 @@ function Login() {
             placeholder="Username or email"
             value={identifier}
             onChange={(event) => setIdentifier(event.target.value)}
+            required
+            autoComplete="username"
             className="w-full rounded-xl border border-white/15 bg-brand-surface px-4 py-3 text-sm text-white outline-none"
           />
           <input
@@ -67,6 +74,8 @@ function Login() {
             placeholder="Password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
+            required
+            autoComplete="current-password"
             className="w-full rounded-xl border border-white/15 bg-brand-surface px-4 py-3 text-sm text-white outline-none"
           />
 

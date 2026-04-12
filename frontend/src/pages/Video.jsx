@@ -191,6 +191,13 @@ function Video() {
     return String(ownerId) === String(user._id);
   }, [video, user]);
 
+  const ownerName =
+    video?.ownerDetails?.fullname ||
+    video?.ownerDetails?.username ||
+    video?.owner?.fullname ||
+    video?.owner?.username ||
+    "Unknown creator";
+
   useEffect(() => {
     if (!video?.id && !video?._id) {
       return;
@@ -467,6 +474,9 @@ function Video() {
         <div className="glass-panel p-6">
           <h1 className="font-display text-2xl text-white">{video.title}</h1>
           <p className="mt-2 text-sm text-brand-muted">{video.views} views</p>
+          <p className="mt-1 text-sm text-brand-muted">
+            Uploaded by {ownerName}
+          </p>
           <p className="mt-4 text-brand-muted">{video.description}</p>
 
           <div className="mt-5 flex flex-wrap items-center gap-2.5 rounded-2xl border border-white/10 bg-[linear-gradient(120deg,rgba(126,34,206,0.18),rgba(30,27,75,0.2),rgba(6,10,24,0.7))] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_14px_30px_rgba(0,0,0,0.28)] sm:gap-3">

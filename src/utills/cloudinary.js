@@ -14,7 +14,93 @@ const getServerBaseUrl = () =>
 
 const getTempFileUrl = (localFilePath) => {
   const fileName = path.basename(localFilePath);
-  return `${getServerBaseUrl()}/temp/${fileName}`;
+  return `${getServerBaseUrl()}/temp/${encodeURIComponent(fileName)}`;
+};
+
+const normalizeMediaUrl = (value) => {
+  if (!value || typeof value !== "string") {
+    return "";
+  }
+
+  if (/^https?:\/\//i.test(value)) {
+    try {
+      const parsedUrl = new URL(value);
+      const isLocalHost =
+        parsedUrl.hostname === "localhost" ||
+        parsedUrl.hostname === "127.0.0.1";
+
+      if (isLocalHost && parsedUrl.pathname.startsWith("/temp/")) {
+        return `${getServerBaseUrl()}${parsedUrl.pathname}`;
+      }
+
+      return value;
+    } catch (_error) {
+      return value;
+    }
+  }
+
+  const normalizedPath = value.replace(/\\/g, "/");
+
+  if (normalizedPath.startsWith("/temp/")) {
+    return `${getServerBaseUrl()}${normalizedPath}`;
+  }
+
+  if (
+    normalizedPath.startsWith("temp/") ||
+    normalizedPath.startsWith("public/temp/") ||
+    normalizedPath.includes("/public/temp/")
+  ) {
+    return getTempFileUrl(normalizedPath);
+  }
+
+  if (normalizedPath.startsWith("/")) {
+    return `${getServerBaseUrl()}${normalizedPath}`;
+  }
+
+  return value;
+};
+
+const isCloudinaryUrl = (value) => {
+  if (!value || typeof value !== "string") {
+    return false;
+  }
+
+  return /(^https?:\/\/)?(?:res\.)?cloudinary\.com\//i.test(value);
+};
+
+const extractCloudinaryPublicId = (value) => {
+  if (!isCloudinaryUrl(value)) {
+    return null;
+  }
+
+  try {
+    const parsed = new URL(value);
+    const pathname = parsed.pathname;
+    const uploadMarker = "/upload/";
+    const uploadIndex = pathname.indexOf(uploadMarker);
+
+    if (uploadIndex === -1) {
+      return null;
+    }
+
+    let publicPath = pathname.slice(uploadIndex + uploadMarker.length);
+
+    // Strip optional transformation/version segments before public id.
+    const segments = publicPath.split("/").filter(Boolean);
+    const versionIndex = segments.findIndex((segment) =>
+      /^v\d+$/.test(segment)
+    );
+    if (versionIndex === -1 || versionIndex === segments.length - 1) {
+      return null;
+    }
+
+    const publicIdWithExt = segments.slice(versionIndex + 1).join("/");
+    const publicId = publicIdWithExt.replace(/\.[^/.?]+$/, "");
+
+    return publicId || null;
+  } catch (_error) {
+    return null;
+  }
 };
 
 const safeUnlink = (localFilePath) => {
@@ -68,6 +154,11 @@ const deleteFromCloudinary = async (publicId) => {
       return null;
     }
 
+    if (!hasCloudinaryConfig()) {
+      console.log("Cloudinary is not configured; skipping delete");
+      return null;
+    }
+
     const result = await cloudinary.uploader.destroy(publicId);
     console.log("Cloudinary delete result:", result);
     return result;
@@ -77,4 +168,9 @@ const deleteFromCloudinary = async (publicId) => {
   }
 };
 
-export { deleteFromCloudinary, uploadToCloudinary };
+export {
+  deleteFromCloudinary,
+  extractCloudinaryPublicId,
+  normalizeMediaUrl,
+  uploadToCloudinary,
+};

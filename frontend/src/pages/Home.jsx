@@ -277,7 +277,7 @@ function Home() {
               <p className="line-clamp-4 text-sm text-brand-muted">
                 {featured.description}
               </p>
-              <div className="inline-flex rounded-full border border-brand-accent/50 px-4 py-1 text-xs text-brand-accent">
+              <div className="inline-flex rounded-full border border-violet-400/70 px-4 py-1 text-xs text-violet-200">
                 {featured.mood} Mode
               </div>
             </div>

@@ -7,6 +7,7 @@ import { ApiResponse } from "../utills/ApiResponse.js";
 import { asyncHandaller } from "../utills/asyncHandaller.js";
 import {
   deleteFromCloudinary,
+  extractCloudinaryPublicId,
   uploadToCloudinary,
 } from "../utills/cloudinary.js";
 const generateAccessAndTokenRefreshToken = async (userId) => {
@@ -31,7 +32,6 @@ const generateAccessAndTokenRefreshToken = async (userId) => {
 
 const refreshTokenSecret =
   process.env.REFRESH_TOKEN_SECRET ||
-  process.env.REFRESHTOKEN_TOKEN_SECRET ||
   (process.env.NODE_ENV !== "production" ? "dev-refresh-token-secret" : "");
 
 const cookieOptions = {
@@ -39,33 +39,42 @@ const cookieOptions = {
   secure: process.env.NODE_ENV === "production",
 };
 
+const normalizeString = (value) =>
+  typeof value === "string" ? value.trim() : "";
+
 const registerController = asyncHandaller(async (req, res) => {
   const { username, email, password, fullname } = req.body;
   console.log(req.body);
-  if (
-    [username, fullname, email, password]?.some((field) => field?.trim() === "")
-  ) {
-    throw new ApiError(400, "All fields are required");
+  const safeUsername = normalizeString(username).toLowerCase();
+  const safeEmail = normalizeString(email).toLowerCase();
+  const safeFullname = normalizeString(fullname);
+  const safePassword = normalizeString(password);
+
+  if (!safeUsername || !safeEmail || !safeFullname || !safePassword) {
+    throw new ApiError(
+      400,
+      "fullname, username, email, and password are required"
+    );
   }
-  const existedUser = await User.findOne({ $or: [{ username }, { email }] });
+
+  if (safePassword.length < 8) {
+    throw new ApiError(400, "password must be at least 8 characters long");
+  }
+
+  const existedUser = await User.findOne({
+    $or: [{ username: safeUsername }, { email: safeEmail }],
+  });
   if (existedUser) {
     throw new ApiError(409, "user or email already  exist");
   }
   console.log("Files received:", req.files);
-  const avatarLocalPath = req.files?.avatar[0]?.path;
-  let coverImageLocalPath;
-  if (
-    req.files &&
-    Array.isArray(req.files.coverImage) &&
-    req.files.coverImage[0].path
-  ) {
-    coverImageLocalPath = req.files.coverImage[0].path;
-  }
+  const avatarLocalPath = req.files?.avatar?.[0]?.path;
+  const coverImageLocalPath = req.files?.coverImage?.[0]?.path;
   const avatar = avatarLocalPath
     ? await uploadToCloudinary(avatarLocalPath)
     : {
         url: `https://api.dicebear.com/8.x/glass/svg?seed=${encodeURIComponent(
-          username
+          safeUsername
         )}`,
       };
 
@@ -77,12 +86,12 @@ const registerController = asyncHandaller(async (req, res) => {
     throw new ApiError(400, "avatar is required");
   }
   const user = await User.create({
-    fullname,
-    email,
+    fullname: safeFullname,
+    email: safeEmail,
     avatar: avatar.url,
     coverImage: coverImage?.url || "",
-    username: username.toLowerCase(),
-    password,
+    username: safeUsername,
+    password: safePassword,
   });
   const createdUser = await User.findById(user._id).select(
     "-password -refreshToken"
@@ -96,14 +105,23 @@ const registerController = asyncHandaller(async (req, res) => {
 });
 const loginController = asyncHandaller(async (req, res) => {
   const { username, email, password } = req.body;
-  if (!username && !email) {
+  const safeUsername = normalizeString(username).toLowerCase();
+  const safeEmail = normalizeString(email).toLowerCase();
+  const safePassword = normalizeString(password);
+
+  if (!safeUsername && !safeEmail) {
     throw new ApiError(404, "username or email is required");
   }
-  const user = await User.findOne({ $or: [{ username }, { email }] });
+  if (!safePassword) {
+    throw new ApiError(400, "password is required");
+  }
+  const user = await User.findOne({
+    $or: [{ username: safeUsername }, { email: safeEmail }],
+  });
   if (!user) {
     throw new ApiError(404, "user not found");
   }
-  const isPasswordValid = await user.isPassword(password);
+  const isPasswordValid = await user.isPassword(safePassword);
   if (!isPasswordValid) {
     throw new ApiError(400, "invalid credential");
   }
@@ -210,16 +228,25 @@ const getCurrentUser = asyncHandaller(async (req, res) => {
 });
 const updateAccountDetails = asyncHandaller(async (req, res) => {
   const { fullname, email } = req.body;
-  if (!fullname || !email) {
-    throw new ApiError(400, "Atleast one fields  are required");
+  const safeFullname = normalizeString(fullname);
+  const safeEmail = normalizeString(email).toLowerCase();
+
+  if (!safeFullname && !safeEmail) {
+    throw new ApiError(400, "At least one field is required");
   }
+
+  const updateFields = {};
+  if (safeFullname) {
+    updateFields.fullname = safeFullname;
+  }
+  if (safeEmail) {
+    updateFields.email = safeEmail;
+  }
+
   const user = await User.findByIdAndUpdate(
     req?.user?._id,
     {
-      $set: {
-        fullname,
-        email,
-      },
+      $set: updateFields,
     },
     {
       new: true,
@@ -257,9 +284,11 @@ const updateAvatar = asyncHandaller(async (req, res) => {
 
   // Delete old avatar if it exists
   if (user.avatar) {
-    const publicId = user.avatar.split("/").pop().split(".")[0];
-    console.log("Deleting old avatar with public_id:", publicId);
-    await deleteFromCloudinary(publicId);
+    const publicId = extractCloudinaryPublicId(user.avatar);
+    if (publicId) {
+      console.log("Deleting old avatar with public_id:", publicId);
+      await deleteFromCloudinary(publicId);
+    }
   }
 
   // Update user with new avatar URL
@@ -293,8 +322,10 @@ const updateCoverImage = asyncHandaller(async (req, res) => {
     throw new ApiError(400, "CoverImage not upload in cloudinary ");
   }
   if (user.coverImage) {
-    const publicId = user.coverImage.split("/").pop().split(".")[0];
-    await deleteFromCloudinary(publicId);
+    const publicId = extractCloudinaryPublicId(user.coverImage);
+    if (publicId) {
+      await deleteFromCloudinary(publicId);
+    }
   }
   const updatedUser = await User.findByIdAndUpdate(
     req.user._id,
@@ -387,7 +418,7 @@ const getWatchHistory = asyncHandaller(async (req, res) => {
     {
       $lookup: {
         from: "videos",
-        localField: "watchistory",
+        localField: "watchHistory",
         foreignField: "_id",
         as: "watchHistory",
         pipeline: [

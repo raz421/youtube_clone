@@ -5,6 +5,8 @@ import { ApiResponse } from "../utills/ApiResponse.js";
 import { asyncHandaller } from "../utills/asyncHandaller.js";
 import {
   deleteFromCloudinary,
+  extractCloudinaryPublicId,
+  normalizeMediaUrl,
   uploadToCloudinary,
 } from "../utills/cloudinary.js";
 
@@ -51,13 +53,23 @@ const getVideoById = asyncHandaller(async (req, res) => {
   if (!id) {
     throw new ApiError(400, "videoId not found in the url");
   }
-  const video = await Video.findById(id);
+  const video = await Video.findById(id).populate(
+    "owner",
+    "username fullname avatar role"
+  );
   if (!video) {
     throw new ApiError(404, "Video not Found");
   }
+
+  const normalizedVideo = {
+    ...video.toObject(),
+    thumbnail: normalizeMediaUrl(video.thumbnail),
+    videoFile: normalizeMediaUrl(video.videoFile),
+  };
+
   res
     .status(200)
-    .json(new ApiResponse(200, video, "video fetched successfully"));
+    .json(new ApiResponse(200, normalizedVideo, "video fetched successfully"));
 });
 const updateVideoDetails = asyncHandaller(async (req, res) => {
   const { id } = req.params;
@@ -84,8 +96,10 @@ const updateVideoDetails = asyncHandaller(async (req, res) => {
     throw new ApiError(401, "thumbnail not upload in Cloudinary");
   }
   if (video.thumbnail) {
-    const public_id = video.thumbnail.split("/").pop().split(".")[0];
-    await deleteFromCloudinary(public_id);
+    const publicId = extractCloudinaryPublicId(video.thumbnail);
+    if (publicId) {
+      await deleteFromCloudinary(publicId);
+    }
   }
   const updateVideo = await Video.findByIdAndUpdate(
     id,

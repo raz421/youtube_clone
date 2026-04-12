@@ -4,7 +4,6 @@ import { ApiError } from "../utills/ApiError.js";
 import { asyncHandaller } from "../utills/asyncHandaller.js";
 
 const accessTokenSecret =
-  process.env.ACCESSTOKEN_TOKEN_SECRET ||
   process.env.ACCESS_TOKEN_SECRET ||
   (process.env.NODE_ENV !== "production" ? "dev-access-token-secret" : "");
 

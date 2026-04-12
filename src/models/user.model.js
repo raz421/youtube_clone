@@ -4,7 +4,6 @@ import mongoose, { Schema } from "mongoose";
 
 const getJwtConfig = () => {
   const accessTokenSecret =
-    process.env.ACCESSTOKEN_TOKEN_SECRET ||
     process.env.ACCESS_TOKEN_SECRET ||
     (process.env.NODE_ENV !== "production"
       ? "dev-access-token-secret"
@@ -12,7 +11,6 @@ const getJwtConfig = () => {
 
   const refreshTokenSecret =
     process.env.REFRESH_TOKEN_SECRET ||
-    process.env.REFRESHTOKEN_TOKEN_SECRET ||
     (process.env.NODE_ENV !== "production"
       ? "dev-refresh-token-secret"
       : undefined);
@@ -20,14 +18,8 @@ const getJwtConfig = () => {
   return {
     accessTokenSecret,
     refreshTokenSecret,
-    accessTokenExpiry:
-      process.env.ACCESSTOKEN_TOKEN_EXPIRY ||
-      process.env.ACCESS_TOKEN_EXPIRY ||
-      "1d",
-    refreshTokenExpiry:
-      process.env.REFRESH_TOKEN_EXPIRY ||
-      process.env.REFRESHTOKEN_TOKEN_EXPIRY ||
-      "10d",
+    accessTokenExpiry: process.env.ACCESS_TOKEN_EXPIRY || "1d",
+    refreshTokenExpiry: process.env.REFRESH_TOKEN_EXPIRY || "10d",
   };
 };
 

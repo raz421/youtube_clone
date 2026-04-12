@@ -139,8 +139,10 @@ export const useAuthStore = create((set, get) => ({
         email,
         password,
       });
-
-      return await get().login({ identifier: email, password });
+      return {
+        ok: true,
+        message: "Account created. Please sign in.",
+      };
     } catch (error) {
       return {
         ok: false,

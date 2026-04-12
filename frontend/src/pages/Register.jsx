@@ -18,14 +18,19 @@ function Register() {
   const onSubmit = async (event) => {
     event.preventDefault();
 
+    if (!fullname.trim() || !username.trim() || !email.trim() || !password) {
+      addToast("error", "Please fill in all fields");
+      return;
+    }
+
     const result = await register({ fullname, username, email, password });
     if (!result.ok) {
       addToast("error", result.message);
       return;
     }
 
-    addToast("success", "Account created");
-    navigate("/");
+    addToast("success", result.message || "Account created");
+    navigate("/login", { replace: true });
   };
 
   return (
@@ -59,6 +64,8 @@ function Register() {
             placeholder="Full name"
             value={fullname}
             onChange={(event) => setFullname(event.target.value)}
+            required
+            autoComplete="name"
             className="w-full rounded-xl border border-white/15 bg-brand-surface px-4 py-3 text-sm text-white outline-none"
           />
           <input
@@ -66,6 +73,8 @@ function Register() {
             placeholder="Username"
             value={username}
             onChange={(event) => setUsername(event.target.value)}
+            required
+            autoComplete="username"
             className="w-full rounded-xl border border-white/15 bg-brand-surface px-4 py-3 text-sm text-white outline-none"
           />
           <input
@@ -73,6 +82,8 @@ function Register() {
             placeholder="Email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
+            required
+            autoComplete="email"
             className="w-full rounded-xl border border-white/15 bg-brand-surface px-4 py-3 text-sm text-white outline-none"
           />
           <input
@@ -80,6 +91,9 @@ function Register() {
             placeholder="Password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
+            required
+            minLength={8}
+            autoComplete="new-password"
             className="w-full rounded-xl border border-white/15 bg-brand-surface px-4 py-3 text-sm text-white outline-none"
           />
 
@@ -104,4 +118,3 @@ function Register() {
 }
 
 export default Register;
-

@@ -6,6 +6,12 @@ import { extractAccentFromImage } from "../utils/extractAccent.js";
 function VideoCard({ video, onThemeChange }) {
   const cardRef = useRef(null);
   const [hovered, setHovered] = useState(false);
+  const ownerLabel =
+    video?.ownerDetails?.fullname ||
+    video?.ownerDetails?.username ||
+    (typeof video?.owner === "object"
+      ? video?.owner?.fullname || video?.owner?.username
+      : "");
 
   const handleEnter = async () => {
     setHovered(true);
@@ -73,6 +79,9 @@ function VideoCard({ video, onThemeChange }) {
         <p className="line-clamp-2 text-sm text-brand-muted">
           {video.description}
         </p>
+        {ownerLabel ? (
+          <p className="text-xs text-brand-muted">Uploaded by {ownerLabel}</p>
+        ) : null}
         <div className="flex items-center justify-between text-xs text-brand-muted">
           <span>{video.mood || "Focus"}</span>
           <span>{video.views || 0} views</span>

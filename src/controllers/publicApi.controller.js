@@ -7,7 +7,7 @@ import { WatchEvent } from "../models/watchEvent.model.js";
 import { ApiError } from "../utills/ApiError.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
 import { asyncHandaller } from "../utills/asyncHandaller.js";
-import { uploadToCloudinary } from "../utills/cloudinary.js";
+import { normalizeMediaUrl, uploadToCloudinary } from "../utills/cloudinary.js";
 
 const safeObjectId = (value) => {
   if (!value || !mongoose.Types.ObjectId.isValid(value)) {
@@ -33,18 +33,30 @@ const detectMood = (title = "", description = "") => {
 
 const serializeVideo = (videoDoc) => {
   const data = videoDoc.toObject ? videoDoc.toObject() : videoDoc;
+  const owner = data.owner;
+
+  const ownerDetails =
+    owner && typeof owner === "object"
+      ? {
+          _id: owner._id || owner.id || owner,
+          username: owner.username || "",
+          fullname: owner.fullname || "",
+          avatar: owner.avatar || "",
+        }
+      : null;
 
   return {
     id: data._id,
     title: data.title,
     description: data.description,
-    thumbnail: data.thumbnail,
-    videoFile: data.videoFile,
+    thumbnail: normalizeMediaUrl(data.thumbnail),
+    videoFile: normalizeMediaUrl(data.videoFile),
     duration: data.duration,
     views: data.views,
     isPublished: data.isPublished,
     mood: detectMood(data.title, data.description),
-    owner: data.owner,
+    owner: owner && typeof owner === "object" ? owner._id || owner.id : owner,
+    ownerDetails,
     createdAt: data.createdAt,
   };
 };
@@ -125,6 +137,7 @@ const getVideos = asyncHandaller(async (req, res) => {
   const parsedPage = Math.max(Number(page) || 1, 1);
 
   const allVideos = await Video.find({ isPublished: true })
+    .populate("owner", "username fullname avatar role")
     .sort({ createdAt: -1 })
     .skip((parsedPage - 1) * parsedLimit)
     .limit(parsedLimit)
@@ -153,7 +166,9 @@ const getVideoDetails = asyncHandaller(async (req, res) => {
     throw new ApiError(400, "Invalid video id");
   }
 
-  const video = await Video.findById(videoId).lean();
+  const video = await Video.findById(videoId)
+    .populate("owner", "username fullname avatar role")
+    .lean();
   if (!video || !video.isPublished) {
     throw new ApiError(404, "Video not found");
   }
@@ -308,6 +323,7 @@ const getSearchResults = asyncHandaller(async (req, res) => {
     isPublished: true,
     $or: [{ title: regex }, { description: regex }],
   })
+    .populate("owner", "username fullname avatar role")
     .sort({ views: -1, createdAt: -1 })
     .limit(30)
     .lean();
@@ -323,6 +339,7 @@ const getSearchResults = asyncHandaller(async (req, res) => {
 
 const getRecommendations = asyncHandaller(async (_req, res) => {
   const recommendations = await Video.find({ isPublished: true })
+    .populate("owner", "username fullname avatar role")
     .sort({ views: -1, createdAt: -1 })
     .limit(12)
     .lean();
