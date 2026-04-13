@@ -1,14 +1,14 @@
 {
   "version": 2,
   "functions": {
-    "src/app.js": {
-      "runtime": "@vercel/node"
+    "api/index.js": {
+      "runtime": "nodejs20.x"
     }
   },
-  "routes": [
+  "rewrites": [
     {
-      "src": "/(.*)",
-      "dest": "src/app.js"
+      "source": "/(.*)",
+      "destination": "/api/index"
     }
   ]
 }
