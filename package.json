@@ -1,33 +1,13 @@
 {
-  "name": "backend_youtube_project",
+  "name": "vidvortex-workspace",
+  "private": true,
   "version": "1.0.0",
-  "main": "index.js",
-  "type": "module",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "npm run dev:all",
-    "dev:all": "concurrently -n backend,frontend -c blue,magenta \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:backend": "nodemon src/index.js",
+    "dev": "concurrently -n backend,frontend -c blue,magenta \"npm --prefix backend run dev\" \"npm --prefix frontend run dev\"",
+    "dev:backend": "npm --prefix backend run dev",
     "dev:frontend": "npm --prefix frontend run dev",
-    "build:frontend": "npm --prefix frontend run build"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
-  "dependencies": {
-    "bcrypt": "^6.0.0",
-    "cloudinary": "^2.7.0",
-    "cookie-parser": "^1.4.7",
-    "cors": "^2.8.5",
-    "dotenv": "^17.2.2",
-    "express": "^5.1.0",
-    "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.18.1",
-    "mongoose-aggregate-paginate-v2": "^1.1.4",
-    "multer": "^2.0.2",
-    "nodemon": "^3.1.10",
-    "prettier": "^3.6.2"
+    "start": "npm --prefix backend run start",
+    "build": "npm --prefix frontend run build"
   },
   "devDependencies": {
     "concurrently": "^9.2.1"

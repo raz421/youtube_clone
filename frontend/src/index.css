@@ -55,18 +55,8 @@ body::before {
   pointer-events: none;
 }
 
-button:not(.navbar-btn):not(.sidebar-btn):not(.video-action-btn) {
-  background-color: #7e22ce;
-}
-
-*,
-*::before,
-*::after {
-  color: #ffffff !important;
-}
-
-*::placeholder {
-  color: #ffffff !important;
+::placeholder {
+  color: #9ca3af;
   opacity: 1;
 }
 
@@ -76,6 +66,207 @@ button:not(.navbar-btn):not(.sidebar-btn):not(.video-action-btn) {
 
 .glass-panel-strong {
   @apply rounded-3xl border border-white/20 bg-[rgba(18,18,28,0.72)] backdrop-blur-2xl;
+}
+
+.vv-input {
+  width: 100%;
+  border-radius: 0.875rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(7, 10, 20, 0.46);
+  padding: 0.85rem 1rem;
+  color: #ffffff;
+  font-size: 0.875rem;
+  outline: none;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.vv-input::placeholder {
+  color: rgba(230, 230, 250, 0.45);
+}
+
+.vv-input:focus {
+  border-color: rgba(157, 78, 221, 0.7);
+  background: rgba(10, 12, 24, 0.64);
+  box-shadow: 0 0 0 3px rgba(157, 78, 221, 0.22);
+}
+
+.vv-button-primary {
+  border-radius: 999px;
+  border: 1px solid rgba(157, 78, 221, 0.72);
+  background: linear-gradient(135deg, #9d4edd 0%, #7c3aed 100%);
+  color: #ffffff;
+  box-shadow:
+    0 14px 34px rgba(157, 78, 221, 0.28),
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.vv-button-primary:hover {
+  border-color: rgba(196, 150, 255, 0.85);
+  box-shadow:
+    0 18px 40px rgba(157, 78, 221, 0.34),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+  transform: translateY(-1px);
+}
+
+.vv-button-primary:active {
+  transform: translateY(0);
+}
+
+.vv-button-secondary {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: #e6e6fa;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.vv-button-secondary:hover {
+  border-color: rgba(157, 78, 221, 0.48);
+  background: rgba(157, 78, 221, 0.12);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.vv-button-danger {
+  border-radius: 999px;
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  background: rgba(120, 30, 40, 0.2);
+  color: #ffe4e6;
+  box-shadow: 0 10px 24px rgba(120, 30, 40, 0.16);
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.vv-button-danger:hover {
+  border-color: rgba(248, 113, 113, 0.5);
+  background: rgba(153, 27, 39, 0.28);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.vv-button-danger:active {
+  transform: translateY(0);
+}
+
+.vv-input {
+  width: 100%;
+  border-radius: 0.875rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(7, 10, 20, 0.46);
+  padding: 0.85rem 1rem;
+  color: #ffffff;
+  font-size: 0.875rem;
+  outline: none;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.vv-input::placeholder {
+  color: rgba(230, 230, 250, 0.45);
+}
+
+.vv-input:focus {
+  border-color: rgba(157, 78, 221, 0.7);
+  background: rgba(10, 12, 24, 0.64);
+  box-shadow: 0 0 0 3px rgba(157, 78, 221, 0.22);
+}
+
+.vv-button-primary {
+  border-radius: 999px;
+  border: 1px solid rgba(157, 78, 221, 0.72);
+  background: linear-gradient(135deg, #9d4edd 0%, #7c3aed 100%);
+  color: #ffffff;
+  box-shadow:
+    0 14px 34px rgba(157, 78, 221, 0.28),
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.vv-button-primary:hover {
+  border-color: rgba(196, 150, 255, 0.85);
+  box-shadow:
+    0 18px 40px rgba(157, 78, 221, 0.34),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+  transform: translateY(-1px);
+}
+
+.vv-button-primary:active {
+  transform: translateY(0);
+}
+
+.vv-button-secondary {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: #e6e6fa;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.vv-button-secondary:hover {
+  border-color: rgba(157, 78, 221, 0.48);
+  background: rgba(157, 78, 221, 0.12);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.vv-button-danger {
+  border-radius: 999px;
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  background: rgba(120, 30, 40, 0.2);
+  color: #ffe4e6;
+  box-shadow: 0 10px 24px rgba(120, 30, 40, 0.16);
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.vv-button-danger:hover {
+  border-color: rgba(248, 113, 113, 0.5);
+  background: rgba(153, 27, 39, 0.28);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.vv-button-danger:active {
+  transform: translateY(0);
+}
+
+.vv-chip {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: #a1a1c2;
 }
 
 @keyframes drift {

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import AnimatedButton from "../components/AnimatedButton.jsx";
 import { api, extractResponseData } from "../lib/api.js";
+import { endpoints } from "../lib/endpoints.js";
 import { useAppStore } from "../store/appStore.js";
 import { useAuthStore } from "../store/authStore.js";
 
@@ -55,7 +56,7 @@ function Upload() {
     payload.append("description", description);
 
     try {
-      const response = await api.post("/upload", payload, {
+      const response = await api.post(endpoints.public.upload, payload, {
         headers: {
           "Content-Type": "multipart/form-data",
         },

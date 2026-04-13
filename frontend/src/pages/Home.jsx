@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import SkeletonCard from "../components/SkeletonCard.jsx";
 import VideoCard from "../components/VideoCard.jsx";
 import { api, extractResponseData } from "../lib/api.js";
+import { endpoints } from "../lib/endpoints.js";
 import { useAppStore } from "../store/appStore.js";
 import { useAuthStore } from "../store/authStore.js";
 
@@ -16,6 +17,8 @@ function Home() {
   const gridRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchLoading, setSearchLoading] = useState(false);
   const [isRouletteRunning, setIsRouletteRunning] = useState(false);
   const [roulettePick, setRoulettePick] = useState(null);
 
@@ -33,7 +36,6 @@ function Home() {
   const removeVideoFromLibrary = useAppStore(
     (state) => state.removeVideoFromLibrary
   );
-  const adaptiveGlow = useAppStore((state) => state.adaptiveGlow);
   const setAdaptiveGlow = useAppStore((state) => state.setAdaptiveGlow);
   const addToast = useAppStore((state) => state.addToast);
   const user = useAuthStore((state) => state.user);
@@ -47,8 +49,8 @@ function Home() {
 
       try {
         const [videosRes, recommendationRes] = await Promise.all([
-          api.get("/videos"),
-          api.get("/recommendations"),
+          api.get(endpoints.public.videos),
+          api.get(endpoints.public.recommendations),
         ]);
 
         if (!mounted) {
@@ -77,6 +79,40 @@ function Home() {
       mounted = false;
     };
   }, [setVideos, setRecommendations, addToast]);
+
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      return;
+    }
+
+    let mounted = true;
+    const timer = setTimeout(async () => {
+      setSearchLoading(true);
+      try {
+        const response = await api.get(endpoints.public.search, {
+          params: { q: searchTerm.trim() },
+        });
+
+        if (mounted) {
+          setVideos(extractResponseData(response) || []);
+          setError("");
+        }
+      } catch {
+        if (mounted) {
+          setError("Search is unavailable right now.");
+        }
+      } finally {
+        if (mounted) {
+          setSearchLoading(false);
+        }
+      }
+    }, 420);
+
+    return () => {
+      mounted = false;
+      clearTimeout(timer);
+    };
+  }, [searchTerm, setVideos]);
 
   useEffect(() => {
     if (!heroRef.current) {
@@ -216,7 +252,7 @@ function Home() {
   };
 
   return (
-    <div className="space-y-10" style={{ "--adaptive-glow": adaptiveGlow }}>
+    <div className="space-y-10" style={{ "--adaptive-glow": "#9D4EDD" }}>
       <section
         ref={heroRef}
         className="glass-panel-strong relative overflow-hidden p-8 shadow-[0_0_70px_var(--adaptive-glow)]"
@@ -233,6 +269,28 @@ function Home() {
           VidVortex blends cinematic playback, adaptive glow UI, and mood-first
           discovery to make every session feel intentional.
         </p>
+
+        <div className="hero-reveal mt-5 grid gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="Search videos by title or description"
+            className="vv-input rounded-2xl"
+          />
+          <button
+            type="button"
+            onClick={() => setSearchTerm("")}
+            className="vv-button-primary rounded-2xl px-4 py-3 text-sm font-medium"
+          >
+            Clear Search
+          </button>
+        </div>
+        {searchLoading ? (
+          <p className="hero-reveal mt-2 text-xs uppercase tracking-[0.2em] text-brand-muted">
+            Searching your library...
+          </p>
+        ) : null}
 
         <div className="hero-reveal mt-6 rounded-2xl border border-brand-base/35 bg-gradient-to-r from-brand-base/14 via-brand-base/7 to-transparent p-4 md:flex md:items-center md:justify-between">
           <div>
@@ -257,7 +315,7 @@ function Home() {
             type="button"
             onClick={runVibeRoulette}
             disabled={isRouletteRunning || loading}
-            className="mt-4 inline-flex rounded-full border border-brand-base/70 bg-brand-base/22 px-5 py-2.5 text-sm font-semibold text-white shadow-glow transition hover:bg-brand-base/35 disabled:cursor-not-allowed disabled:opacity-60 md:mt-0"
+            className="vv-button-primary mt-4 inline-flex px-5 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60 md:mt-0"
           >
             {isRouletteRunning ? "Spinning..." : "Launch Roulette"}
           </button>
@@ -277,7 +335,7 @@ function Home() {
               <p className="line-clamp-4 text-sm text-brand-muted">
                 {featured.description}
               </p>
-              <div className="inline-flex rounded-full border border-violet-400/70 px-4 py-1 text-xs text-violet-200">
+              <div className="inline-flex rounded-full border border-purple-400/70 bg-purple-700 px-4 py-1 text-xs text-white">
                 {featured.mood} Mode
               </div>
             </div>
@@ -349,7 +407,7 @@ function Home() {
                       <button
                         type="button"
                         onClick={() => handleRemoveDownloaded(videoId)}
-                        className="w-full rounded-xl border border-brand-base/60 bg-brand-base/20 px-3 py-2 text-xs text-white transition hover:bg-brand-base/30"
+                        className="vv-button-secondary w-full px-3 py-2 text-xs"
                       >
                         Remove From Downloads
                       </button>
@@ -359,7 +417,7 @@ function Home() {
                       <button
                         type="button"
                         onClick={() => handlePermanentDelete(video)}
-                        className="w-full rounded-xl border border-rose-400/55 bg-rose-500/20 px-3 py-2 text-xs text-rose-100 transition hover:bg-rose-500/30"
+                        className="vv-button-danger w-full px-3 py-2 text-xs"
                       >
                         Delete Video Permanently
                       </button>

@@ -494,10 +494,8 @@ function Video() {
             <button
               type="button"
               onClick={handleVideoDislikeToggle}
-              className={`video-action-btn min-h-9 whitespace-nowrap rounded-full border px-4 py-2 text-[11px] font-semibold tracking-[0.01em] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_22px_rgba(0,0,0,0.3)] sm:text-xs ${
-                isDisliked
-                  ? "border-rose-300/80 bg-gradient-to-r from-rose-600 to-pink-600 text-white"
-                  : "border-white/20 bg-gradient-to-r from-violet-700/80 to-purple-700/80 text-white/90 hover:border-rose-300/65"
+              className={`video-action-btn min-h-9 whitespace-nowrap rounded-full px-4 py-2 text-[11px] font-semibold tracking-[0.01em] transition-all duration-300 hover:-translate-y-0.5 sm:text-xs ${
+                isDisliked ? "vv-button-danger" : "vv-button-secondary"
               }`}
             >
               {isDisliked ? "Disliked" : "Dislike Video"}
@@ -505,10 +503,8 @@ function Video() {
             <button
               type="button"
               onClick={handleWatchLaterToggle}
-              className={`video-action-btn min-h-9 whitespace-nowrap rounded-full border px-4 py-2 text-[11px] font-semibold tracking-[0.01em] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_22px_rgba(0,0,0,0.3)] sm:text-xs ${
-                isInWatchLater
-                  ? "border-cyan-300/80 bg-gradient-to-r from-cyan-600 to-sky-600 text-white"
-                  : "border-white/20 bg-gradient-to-r from-violet-700/80 to-purple-700/80 text-white/90 hover:border-cyan-300/65"
+              className={`video-action-btn min-h-9 whitespace-nowrap rounded-full px-4 py-2 text-[11px] font-semibold tracking-[0.01em] transition-all duration-300 hover:-translate-y-0.5 sm:text-xs ${
+                isInWatchLater ? "vv-button-primary" : "vv-button-secondary"
               }`}
             >
               {isInWatchLater ? "Saved" : "Watch Later"}
@@ -516,7 +512,7 @@ function Video() {
             <button
               type="button"
               onClick={handleDownloadVideo}
-              className="video-action-btn min-h-9 whitespace-nowrap rounded-full border border-cyan-300/75 bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-2 text-[11px] font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 hover:brightness-110 hover:shadow-[0_10px_22px_rgba(6,182,212,0.3)] sm:text-xs"
+              className="video-action-btn vv-button-secondary min-h-9 whitespace-nowrap px-4 py-2 text-[11px] font-semibold transition-all duration-300 hover:-translate-y-0.5 sm:text-xs"
             >
               Download Video
             </button>
@@ -524,7 +520,7 @@ function Video() {
               <button
                 type="button"
                 onClick={handleDeleteVideo}
-                className="video-action-btn min-h-9 whitespace-nowrap rounded-full border border-rose-300/75 bg-gradient-to-r from-rose-600 to-red-600 px-4 py-2 text-[11px] font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 hover:brightness-110 hover:shadow-[0_10px_22px_rgba(244,63,94,0.32)] sm:text-xs"
+                className="video-action-btn vv-button-danger min-h-9 whitespace-nowrap px-4 py-2 text-[11px] font-semibold transition-all duration-300 hover:-translate-y-0.5 sm:text-xs"
               >
                 Delete Video
               </button>
@@ -534,10 +530,8 @@ function Video() {
                 type="button"
                 onClick={handleSubscribeToggle}
                 disabled={subscriptionBusy}
-                className={`video-action-btn min-h-9 whitespace-nowrap rounded-full border px-4 py-2 text-[11px] font-semibold tracking-[0.01em] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_22px_rgba(0,0,0,0.3)] disabled:cursor-not-allowed disabled:opacity-60 sm:text-xs ${
-                  isSubscribed
-                    ? "border-cyan-300/80 bg-gradient-to-r from-cyan-600 to-blue-600 text-white"
-                    : "border-fuchsia-300/80 bg-gradient-to-r from-fuchsia-600 to-violet-600 text-white"
+                className={`video-action-btn min-h-9 whitespace-nowrap rounded-full px-4 py-2 text-[11px] font-semibold tracking-[0.01em] transition-all duration-300 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 sm:text-xs ${
+                  isSubscribed ? "vv-button-primary" : "vv-button-secondary"
                 }`}
               >
                 {subscriptionBusy
@@ -607,10 +601,10 @@ function Video() {
                   <button
                     type="button"
                     onClick={() => handleCommentLikeToggle(comment._id)}
-                    className={`rounded-full border px-3 py-1 text-[11px] transition ${
+                    className={`rounded-full px-3 py-1 text-[11px] transition ${
                       likedComments.includes(comment._id)
-                        ? "border-brand-base/70 bg-brand-base/25 text-white"
-                        : "border-white/15 text-brand-muted hover:text-white"
+                        ? "vv-button-primary"
+                        : "vv-button-secondary"
                     }`}
                   >
                     {likedComments.includes(comment._id)
@@ -695,10 +689,8 @@ function Video() {
                           type="button"
                           onClick={() => handlePlaylistVideoToggle(playlistId)}
                           disabled={playlistBusyId === playlistId}
-                          className={`rounded-full border px-4 py-2 text-xs transition disabled:cursor-not-allowed disabled:opacity-60 ${
-                            hasVideo
-                              ? "border-rose-400/60 bg-rose-500/20 text-rose-100 hover:bg-rose-500/30"
-                              : "border-brand-base/60 bg-brand-base/20 text-white hover:bg-brand-base/30"
+                          className={`rounded-full px-4 py-2 text-xs transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                            hasVideo ? "vv-button-danger" : "vv-button-primary"
                           }`}
                         >
                           {playlistBusyId === playlistId

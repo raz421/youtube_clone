@@ -67,7 +67,7 @@ function Login() {
             onChange={(event) => setIdentifier(event.target.value)}
             required
             autoComplete="username"
-            className="w-full rounded-xl border border-white/15 bg-brand-surface px-4 py-3 text-sm text-white outline-none"
+            className="vv-input"
           />
           <input
             type="password"
@@ -76,7 +76,7 @@ function Login() {
             onChange={(event) => setPassword(event.target.value)}
             required
             autoComplete="current-password"
-            className="w-full rounded-xl border border-white/15 bg-brand-surface px-4 py-3 text-sm text-white outline-none"
+            className="vv-input"
           />
 
           <AnimatedButton

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { api, extractResponseData } from "../lib/api.js";
+import { endpoints } from "../lib/endpoints.js";
 import { useAppStore } from "../store/appStore.js";
 import { useAuthStore } from "../store/authStore.js";
 
@@ -31,7 +32,7 @@ function Settings() {
     setIsSavingProfile(true);
 
     try {
-      const response = await api.patch("/api/v1/users/updateDetails", {
+      const response = await api.patch(endpoints.users.updateDetails, {
         fullname,
         email,
       });
@@ -58,7 +59,7 @@ function Settings() {
 
     setIsSavingPassword(true);
     try {
-      await api.post("/api/v1/users/change-password", {
+      await api.post(endpoints.users.changePassword, {
         oldPassword,
         newPassword,
       });
@@ -88,7 +89,7 @@ function Settings() {
       const payload = new FormData();
       payload.append("avatar", avatarFile);
 
-      const response = await api.patch("/api/v1/users/updateAvatar", payload, {
+      const response = await api.patch(endpoints.users.updateAvatar, payload, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -126,19 +127,19 @@ function Settings() {
             value={fullname}
             onChange={(event) => setFullname(event.target.value)}
             placeholder="Full name"
-            className="w-full rounded-xl border border-white/15 bg-brand-surface px-4 py-3 text-sm text-white outline-none"
+            className="vv-input"
           />
           <input
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             placeholder="Email"
-            className="w-full rounded-xl border border-white/15 bg-brand-surface px-4 py-3 text-sm text-white outline-none"
+            className="vv-input"
           />
           <button
             type="submit"
             disabled={isSavingProfile}
-            className="rounded-xl bg-brand-base px-4 py-2 text-sm text-white disabled:opacity-60"
+            className="vv-button-primary px-4 py-2 text-sm disabled:opacity-60"
           >
             {isSavingProfile ? "Saving..." : "Save Profile"}
           </button>
@@ -160,7 +161,7 @@ function Settings() {
           <button
             type="submit"
             disabled={isSavingAvatar}
-            className="rounded-xl bg-brand-accent px-4 py-2 text-sm text-black disabled:opacity-60"
+            className="vv-button-secondary px-4 py-2 text-sm disabled:opacity-60"
           >
             {isSavingAvatar ? "Uploading..." : "Upload Avatar"}
           </button>
@@ -175,21 +176,21 @@ function Settings() {
             value={oldPassword}
             onChange={(event) => setOldPassword(event.target.value)}
             placeholder="Current password"
-            className="w-full rounded-xl border border-white/15 bg-brand-surface px-4 py-3 text-sm text-white outline-none"
+            className="vv-input"
           />
           <input
             type="password"
             value={newPassword}
             onChange={(event) => setNewPassword(event.target.value)}
             placeholder="New password"
-            className="w-full rounded-xl border border-white/15 bg-brand-surface px-4 py-3 text-sm text-white outline-none"
+            className="vv-input"
           />
         </div>
 
         <button
           type="submit"
           disabled={isSavingPassword}
-          className="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm text-white disabled:opacity-60"
+          className="vv-button-secondary px-4 py-2 text-sm disabled:opacity-60"
         >
           {isSavingPassword ? "Updating..." : "Change Password"}
         </button>
@@ -199,4 +200,3 @@ function Settings() {
 }
 
 export default Settings;
-

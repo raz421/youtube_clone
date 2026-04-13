@@ -164,7 +164,7 @@ function Navbar() {
                           key={item.label}
                           type="button"
                           onClick={item.onClick}
-                          className="navbar-btn group flex w-full items-center justify-between rounded-xl border border-transparent px-4 py-3 text-left text-sm font-medium text-white/72 transition-all duration-200 hover:border-white/8 hover:bg-white/6 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-base/35"
+                          className="navbar-btn vv-button-secondary group flex w-full items-center justify-between px-4 py-3 text-left text-sm font-medium text-white/72 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-base/35"
                         >
                           <span>{item.label}</span>
                           <span className="text-xs text-white/25 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-white/55">
@@ -179,7 +179,7 @@ function Navbar() {
                     <button
                       type="button"
                       onClick={onLogout}
-                      className="navbar-btn flex w-full items-center justify-between rounded-xl border border-rose-400/15 bg-[rgba(78,24,34,0.18)] px-4 py-3 text-left text-sm font-medium text-rose-200/85 transition-all duration-200 hover:border-rose-300/25 hover:bg-[rgba(109,30,41,0.28)] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/30"
+                      className="navbar-btn vv-button-danger flex w-full items-center justify-between px-4 py-3 text-left text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/30"
                     >
                       <span>Logout</span>
                       <span className="text-xs text-rose-200/55">⟶</span>
@@ -192,7 +192,7 @@ function Navbar() {
             <>
               <Link
                 to="/login"
-                className="rounded-lg border border-brand-base/70 bg-brand-base px-4 py-2 text-sm font-semibold text-white shadow-glow transition-all duration-300 hover:bg-brand-base/90 hover:shadow-xl hover:shadow-brand-base/30 active:scale-95"
+                className="vv-button-primary px-4 py-2 text-sm font-semibold"
               >
                 Login
               </Link>

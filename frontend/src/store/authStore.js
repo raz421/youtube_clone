@@ -5,6 +5,7 @@ import {
   extractResponseData,
   setApiToken,
 } from "../lib/api.js";
+import { endpoints } from "../lib/endpoints.js";
 import { useAppStore } from "./appStore.js";
 
 const ACCESS_KEY = "vv_access_token";
@@ -54,7 +55,7 @@ export const useAuthStore = create((set, get) => ({
         setApiToken(accessToken);
       }
 
-      const profileResponse = await api.get("/api/v1/users/current-user");
+      const profileResponse = await api.get(endpoints.users.currentUser);
       const user = extractResponseData(profileResponse);
       hydrateUserLibrary(user?._id);
       set({
@@ -65,16 +66,13 @@ export const useAuthStore = create((set, get) => ({
     } catch (error) {
       if (refreshToken) {
         try {
-          const refreshResponse = await api.post(
-            "/api/v1/users/refresh-token",
-            {
-              refreshToken,
-            }
-          );
+          const refreshResponse = await api.post(endpoints.users.refreshToken, {
+            refreshToken,
+          });
           const tokens = extractResponseData(refreshResponse);
           saveTokens(tokens.accessToken, tokens.refreshToken);
 
-          const profileResponse = await api.get("/api/v1/users/current-user");
+          const profileResponse = await api.get(endpoints.users.currentUser);
           const user = extractResponseData(profileResponse);
           hydrateUserLibrary(user?._id);
           set({
@@ -107,7 +105,7 @@ export const useAuthStore = create((set, get) => ({
         ? { email: identifier, password }
         : { username: identifier, password };
 
-      const response = await api.post("/api/v1/users/login", payload);
+      const response = await api.post(endpoints.users.login, payload);
       const data = extractResponseData(response);
       saveTokens(data.accessToken, data.refreshToken);
 
@@ -133,7 +131,7 @@ export const useAuthStore = create((set, get) => ({
     set({ isAuthLoading: true });
 
     try {
-      await api.post("/api/v1/users/register", {
+      await api.post(endpoints.users.register, {
         fullname,
         username,
         email,
@@ -156,7 +154,7 @@ export const useAuthStore = create((set, get) => ({
   logout: async () => {
     const clearUserLibrary = useAppStore.getState().clearUserLibrary;
     try {
-      await api.post("/api/v1/users/logout");
+      await api.post(endpoints.users.logout);
     } catch (error) {
       // Ignore API logout failures and always clear local client state.
     }
@@ -169,7 +167,7 @@ export const useAuthStore = create((set, get) => ({
   refreshUser: async () => {
     const hydrateUserLibrary = useAppStore.getState().hydrateUserLibrary;
     try {
-      const profileResponse = await api.get("/api/v1/users/current-user");
+      const profileResponse = await api.get(endpoints.users.currentUser);
       const user = extractResponseData(profileResponse);
       hydrateUserLibrary(user?._id);
       set({ user });

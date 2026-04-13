@@ -66,7 +66,7 @@ function Register() {
             onChange={(event) => setFullname(event.target.value)}
             required
             autoComplete="name"
-            className="w-full rounded-xl border border-white/15 bg-brand-surface px-4 py-3 text-sm text-white outline-none"
+            className="vv-input"
           />
           <input
             type="text"
@@ -75,7 +75,7 @@ function Register() {
             onChange={(event) => setUsername(event.target.value)}
             required
             autoComplete="username"
-            className="w-full rounded-xl border border-white/15 bg-brand-surface px-4 py-3 text-sm text-white outline-none"
+            className="vv-input"
           />
           <input
             type="email"
@@ -84,7 +84,7 @@ function Register() {
             onChange={(event) => setEmail(event.target.value)}
             required
             autoComplete="email"
-            className="w-full rounded-xl border border-white/15 bg-brand-surface px-4 py-3 text-sm text-white outline-none"
+            className="vv-input"
           />
           <input
             type="password"
@@ -94,7 +94,7 @@ function Register() {
             required
             minLength={8}
             autoComplete="new-password"
-            className="w-full rounded-xl border border-white/15 bg-brand-surface px-4 py-3 text-sm text-white outline-none"
+            className="vv-input"
           />
 
           <AnimatedButton
